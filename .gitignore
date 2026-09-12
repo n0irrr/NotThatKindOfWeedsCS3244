@@ -1,0 +1,37 @@
+# Data (DeepWeeds images are ~470MB — download via src/data/download.py)
+data/raw/*
+data/processed/*
+data/splits/*
+!data/**/.gitkeep
+
+# Model weights / checkpoints
+*.h5
+*.pt
+*.pth
+*.keras
+*.ckpt
+*.pkl
+*.joblib
+experiments/checkpoints/
+
+# Experiment tracking
+wandb/
+mlruns/
+tensorboard/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/

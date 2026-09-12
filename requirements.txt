@@ -1,0 +1,26 @@
+# Core
+numpy
+pandas
+scikit-learn
+scipy
+
+# Imaging
+Pillow
+opencv-python
+
+# Deep learning (pick one backend; torch by default)
+torch
+torchvision
+
+# Visualisation
+matplotlib
+seaborn
+
+# Notebooks
+jupyter
+ipykernel
+
+# Utilities
+tqdm
+pyyaml
+requests

@@ -1,0 +1,40 @@
+# Shared defaults — override per experiment with a new YAML in this folder.
+seed: 42
+
+data:
+  labels_csv: data/raw/labels.csv
+  images_dir: data/raw/images
+  splits_dir: data/splits
+  # Mirrors the DeepWeeds paper split ratio
+  train_frac: 0.6
+  val_frac: 0.2
+  test_frac: 0.2
+  stratify: true
+  image_size: [224, 224]
+
+# Class names as in the DeepWeeds labels.csv (Species column)
+classes:
+  - Chinee apple
+  - Lantana
+  - Parkinsonia
+  - Parthenium
+  - Prickly acacia
+  - Rubber vine
+  - Siam weed
+  - Snake weed
+  - Negative
+
+model:
+  name: knn            # knn | simple_cnn | resnet50
+  params: {}
+
+training:
+  epochs: 20
+  batch_size: 32
+  learning_rate: 1.0e-3
+  augmentation: false
+
+evaluation:
+  metrics: [accuracy, macro_precision, macro_recall, macro_f1]
+  per_class: true
+  confusion_matrix: true
