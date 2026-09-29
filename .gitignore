@@ -1,8 +1,6 @@
 # Data (DeepWeeds images are ~470MB — download via src/data/download.py)
-data/raw/*
-data/processed/*
-data/splits/*
-!data/**/.gitkeep
+data/images
+data/labels.csv
 
 # Model weights / checkpoints
 *.h5
