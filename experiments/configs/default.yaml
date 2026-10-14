@@ -2,14 +2,15 @@
 seed: 42
 
 data:
-  labels_csv: data/raw/labels.csv
-  images_dir: data/raw/images
+  labels_csv: data/labels.csv
+  images_dir: data/images
   splits_dir: data/splits
   # Mirrors the DeepWeeds paper split ratio
   train_frac: 0.6
   val_frac: 0.2
   test_frac: 0.2
   stratify: true
+  group_by_session: true   # keep each capture session within one split (leakage)
   image_size: [224, 224]
 
 # Class names as in the DeepWeeds labels.csv (Species column)
