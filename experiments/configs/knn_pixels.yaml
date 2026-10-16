@@ -1,0 +1,15 @@
+# KNN on downsampled raw pixels. Merged on top of default.yaml.
+run_name: knn_pixels
+
+features:
+  name: flattened_pixels
+  load_size: [64, 64]   # images decoded + cached at this size
+  size: [32, 32]        # then downsampled to 32x32x3 = 3072 dims
+
+model:
+  name: knn
+  params:
+    k_grid: [1, 3, 5, 7, 11, 15, 21, 31]
+    weights: [uniform, distance]
+    metric: euclidean
+    pca: 100

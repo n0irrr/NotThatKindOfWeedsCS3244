@@ -1,9 +1,7 @@
 # Not that kind of Weed
 
 CS3244 project: automated weed species classification on the
-[DeepWeeds](https://github.com/AlexOlsen/DeepWeeds) dataset — 17,509 in-situ RGB
-field images across 8 Australian weed species + a Negative class, collected at
-8 Queensland sites.
+[DeepWeeds](https://github.com/AlexOlsen/DeepWeeds) dataset — 17,509 in-situ RGB field images across 8 Australian weed species + a Negative class, collected at 8 Queensland sites.
 
 ## Key questions
 

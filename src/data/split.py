@@ -6,7 +6,6 @@ notebooks/01_eda.ipynb, section 6). No resampling is done here: val/test keep
 the natural class distribution, and class imbalance is handled on train only.
 
 Also exposes a leave-one-site-out split for testing cross-site generalisation
-(an A-grade goal in the proposal).
 """
 from pathlib import Path
 
