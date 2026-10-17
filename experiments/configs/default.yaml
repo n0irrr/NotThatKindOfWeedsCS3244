@@ -12,6 +12,7 @@ data:
   stratify: true
   group_by_session: true   # keep each capture session within one split (leakage)
   image_size: [224, 224]
+  normalise: train         # train (stats from train split only) | imagenet (pretrained backbones)
 
 # Class names as in the DeepWeeds labels.csv (Species column)
 classes:
@@ -33,7 +34,9 @@ training:
   epochs: 20
   batch_size: 32
   learning_rate: 1.0e-3
-  augmentation: false
+  # Train split only. Any of: flip, rotate, crop, translate, colour, blur, noise
+  # (see src/features/augment.py). Empty = reference run.
+  augmentation: []
 
 evaluation:
   metrics: [accuracy, macro_precision, macro_recall, macro_f1]
