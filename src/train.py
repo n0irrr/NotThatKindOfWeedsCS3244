@@ -108,8 +108,6 @@ def run_cnn(config, eval_only=False, resume=False):
     import torch.nn as nn
     from torch.utils.data import DataLoader, TensorDataset
 
-    from src.models import simple_cnn
-
     seed_everything(config["seed"])
     device = get_device()
     tr_cfg, params = config["training"], config["model"]["params"]
@@ -118,10 +116,14 @@ def run_cnn(config, eval_only=False, resume=False):
     images = load_images(config, tuple(config["data"]["image_size"]))
     y_tr = images["train"][1]
 
-    # Per-channel normalisation stats from train only.
+    # Pretrained backbones expect ImageNet stats; from-scratch models use train-only stats.
     x_tr = images["train"][0]
-    mean = torch.tensor(x_tr.reshape(-1, 3).mean(0) / 255, dtype=torch.float32, device=device).view(1, 3, 1, 1)
-    std = torch.tensor(x_tr.reshape(-1, 3).std(0) / 255, dtype=torch.float32, device=device).view(1, 3, 1, 1)
+    if params.get("pretrained"):
+        mean, std = np.array([0.485, 0.456, 0.406]), np.array([0.229, 0.224, 0.225])
+    else:
+        mean, std = x_tr.reshape(-1, 3).mean(0) / 255, x_tr.reshape(-1, 3).std(0) / 255
+    mean = torch.tensor(mean, dtype=torch.float32, device=device).view(1, 3, 1, 1)
+    std = torch.tensor(std, dtype=torch.float32, device=device).view(1, 3, 1, 1)
 
     def loader(split, shuffle):
         x, y = images[split]
@@ -138,14 +140,34 @@ def run_cnn(config, eval_only=False, resume=False):
 
     loaders = {s: loader(s, s == "train") for s in SPLITS}
 
-    model = simple_cnn.build(len(config["classes"]), params).to(device)
+    model = build_model(config).to(device)
     n_params = sum(p.numel() for p in model.parameters())
     print(f"device: {device}, params: {n_params:,}, train images: {x_tr.shape}")
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=tr_cfg["learning_rate"],
-                                 weight_decay=params.get("weight_decay", 0.0))
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=tr_cfg["epochs"])
+    # Stage "head": backbone frozen, head only at head_learning_rate (constant).
+    # Stage "full": everything trainable, learning_rate with cosine decay over the
+    # remaining epochs. freeze_epochs=0 (the default) means "full" throughout.
+    freeze_epochs = tr_cfg.get("freeze_epochs", 0)
+
+    def stage_for(epoch):
+        return "head" if epoch <= freeze_epochs else "full"
+
+    def make_optimizer(stage):
+        if hasattr(model, "fc"):
+            from src.models.transfer import set_backbone_trainable
+            set_backbone_trainable(model, stage == "full")
+        trainable = [p for p in model.parameters() if p.requires_grad]
+        lr = tr_cfg["head_learning_rate"] if stage == "head" else tr_cfg["learning_rate"]
+        opt = torch.optim.Adam(trainable, lr=lr, weight_decay=params.get("weight_decay", 0.0))
+        if stage == "head":
+            sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda _: 1.0)
+        else:
+            sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=tr_cfg["epochs"] - freeze_epochs)
+        return opt, sched
+
+    stage = stage_for(1)
+    optimizer, scheduler = make_optimizer(stage)
 
     @torch.no_grad()
     def predict(split):
@@ -169,6 +191,8 @@ def run_cnn(config, eval_only=False, resume=False):
         if last_path.exists():
             state = torch.load(last_path, map_location=device)
             model.load_state_dict(state["model"])
+            stage = state.get("stage", "full")
+            optimizer, scheduler = make_optimizer(stage)
             optimizer.load_state_dict(state["optimizer"])
             scheduler.load_state_dict(state["scheduler"])
             history, best_f1, best_epoch = state["history"], state["best_f1"], state["best_epoch"]
@@ -182,9 +206,11 @@ def run_cnn(config, eval_only=False, resume=False):
             history = [h for h in prev["history"] if h["epoch"] <= best_epoch]
             best_f1 = max(h["val_macro_f1"] for h in history)
             model.load_state_dict(torch.load(ckpt_path, map_location=device))
+            stage = stage_for(best_epoch)
+            optimizer, scheduler = make_optimizer(stage)
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                for _ in range(best_epoch):
+                for _ in range(best_epoch - (0 if stage == "head" else freeze_epochs)):
                     scheduler.step()
             start_epoch = best_epoch + 1
             print(f"resuming from best weights {ckpt_path.relative_to(ROOT)} (epoch {best_epoch}, "
@@ -192,7 +218,14 @@ def run_cnn(config, eval_only=False, resume=False):
 
     for epoch in range(start_epoch, 0 if eval_only else tr_cfg["epochs"] + 1):
         t0 = time.time()
+        if stage_for(epoch) != stage:
+            stage = stage_for(epoch)
+            optimizer, scheduler = make_optimizer(stage)
+            print(f"  stage -> {stage} (lr {scheduler.get_last_lr()[0]:.1e})")
         model.train()
+        if stage == "head":
+            model.eval()       # frozen backbone: keep BatchNorm running stats fixed
+            model.fc.train()
         loss_sum, correct = 0.0, 0
         for xb, yb in loaders["train"]:
             yb = yb.to(device)
@@ -215,7 +248,8 @@ def run_cnn(config, eval_only=False, resume=False):
             best_f1, best_epoch = val_f1, epoch
             torch.save(model.state_dict(), ckpt_path)
         torch.save({"model": model.state_dict(), "optimizer": optimizer.state_dict(),
-                    "scheduler": scheduler.state_dict(), "epoch": epoch, "history": history,
+                    "scheduler": scheduler.state_dict(), "stage": stage,
+                    "epoch": epoch, "history": history,
                     "best_f1": best_f1, "best_epoch": best_epoch}, last_path)
         print(f"  epoch {epoch:>2}  train loss {row['train_loss']:.3f} acc {row['train_acc']:.3f}  "
               f"val loss {val_loss:.3f} macro F1 {val_f1:.4f}{' *' if improved else ''}  "
@@ -226,6 +260,9 @@ def run_cnn(config, eval_only=False, resume=False):
 
     if eval_only:
         print(f"eval only: loading {ckpt_path.relative_to(ROOT)}")
+        if last_path.exists():  # keep the training history in the rewritten metrics JSON
+            state = torch.load(last_path, map_location="cpu")
+            history, best_epoch = state["history"], state["best_epoch"]
     else:
         print(f"best epoch {best_epoch}, val macro F1 {best_f1:.4f}")
     model.load_state_dict(torch.load(ckpt_path, map_location=device))
@@ -234,6 +271,16 @@ def run_cnn(config, eval_only=False, resume=False):
     preds = {s: (images[s][1], predict(s)[1]) for s in ("val", "test")}
     return preds, y_tr, {"best_epoch": best_epoch, "n_params": n_params,
                          "device": str(device), "history": history}
+
+
+def build_model(config):
+    name, params, n = config["model"]["name"], config["model"]["params"], len(config["classes"])
+    if name == "simple_cnn":
+        from src.models import simple_cnn
+        return simple_cnn.build(n, params)
+    from src.models import transfer
+    return transfer.build(name, n, freeze_backbone=False, dropout=params.get("dropout", 0.3),
+                          pretrained=params.get("pretrained", True))
 
 
 def plot_curves(history, out_path, title):
@@ -258,7 +305,7 @@ def plot_curves(history, out_path, title):
 
 # ---------------------------------------------------------------- shared
 
-RUNNERS = {"knn": run_knn, "simple_cnn": run_cnn}
+RUNNERS = {"knn": run_knn, "simple_cnn": run_cnn, "resnet50": run_cnn}
 
 
 def report(config, preds, y_train, extra, elapsed):

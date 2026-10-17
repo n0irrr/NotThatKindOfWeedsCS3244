@@ -1,0 +1,22 @@
+# ResNet50 pretrained on ImageNet, fine-tuned. Merged on top of default.yaml.
+# 128x128 to match simple_cnn, so pretraining is the only factor changed.
+run_name: resnet50
+
+data:
+  image_size: [128, 128]
+
+model:
+  name: resnet50
+  params:
+    pretrained: true
+    dropout: 0.3
+    weight_decay: 1.0e-4
+
+training:
+  freeze_epochs: 2          # head-only warm-up before unfreezing the backbone
+  epochs: 15
+  batch_size: 32
+  learning_rate: 1.0e-4     # full fine-tuning
+  head_learning_rate: 1.0e-3
+  patience: 5
+  augmentation: false
