@@ -1,0 +1,20 @@
+# Small CNN from scratch: plain baseline (no augmentation, no class weighting).
+# Merged on top of default.yaml.
+run_name: simple_cnn
+
+data:
+  image_size: [128, 128]
+
+model:
+  name: simple_cnn
+  params:
+    channels: [32, 64, 128, 256]
+    dropout: 0.3
+    weight_decay: 1.0e-4
+
+training:
+  epochs: 30
+  batch_size: 64
+  learning_rate: 1.0e-3
+  patience: 5
+  augmentation: false
