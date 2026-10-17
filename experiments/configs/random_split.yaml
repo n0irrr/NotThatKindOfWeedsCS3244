@@ -1,0 +1,5 @@
+# Default config on the random stratified split (the paper's protocol), for
+# comparing against the session-grouped split. To run a model on it, add the
+# same data.splits_dir override to that model's config.
+data:
+  splits_dir: data/splits_random
