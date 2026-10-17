@@ -16,8 +16,10 @@ CS3244 project: automated weed species classification on the
 data/                 raw images + labels (gitignored), processed arrays, split CSVs
 notebooks/            01_eda → 02_baseline → 03_cnn → 04_transfer → 05_error_analysis
 src/
-  data/               download.py · split.py (stratified 60/20/20, leave-one-site-out) · dataset.py
-  features/           classical.py (pixels, histograms) · augment.py
+  data/               split.py (session-grouped stratified 60/20/20; random split for comparison)
+                      dataset.py (in-memory arrays for classical models, lazy Dataset for CNNs)
+                      stats.py (train-only normalisation stats)
+  features/           classical.py (pixels, histograms) · augment.py (CNN transforms + augmentations)
   models/             knn.py · simple_cnn.py · transfer.py
   evaluation/         metrics.py (macro P/R/F1) · confusion.py
   train.py            entry point, driven by a YAML config
@@ -33,9 +35,23 @@ reports/              proposal, final report
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-python -m src.data.download        # fetch DeepWeeds into data/raw/
-python -m src.train --config experiments/configs/default.yaml
 ```
+
+Data (gitignored): put the 17,509 JPGs in `data/images/` and the official `labels.csv`
+in `data/`. The authors' Google Drive link is often over quota; the Kaggle mirror
+(`kaggle.com/datasets/imsparsh/deepweeds`, images in `images/`) has the same files.
+`data/images` can also be a link to a folder elsewhere.
+
+```bash
+curl -L -o data/labels.csv https://raw.githubusercontent.com/AlexOlsen/DeepWeeds/master/labels/labels.csv
+python -m src.data.split               # session-grouped split -> data/splits/ (committed)
+python -m src.data.split --no-group    # random split -> data/splits_random/ (committed)
+python -m src.data.stats               # train-only normalisation stats (committed)
+python -m src.train --config experiments/configs/knn_hist.yaml
+```
+
+Splits and stats are already in the repo, so only re-run those steps if you
+change the split logic or `data.image_size`.
 
 ## Evaluation
 
