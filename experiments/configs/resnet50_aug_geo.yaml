@@ -1,0 +1,23 @@
+# resnet50.yaml + geometric augmentation (flips and 90-degree rotations).
+# Only change vs resnet50.yaml. Merged on top of default.yaml.
+run_name: resnet50_aug_geo
+
+data:
+  image_size: [128, 128]
+  normalise: imagenet
+
+model:
+  name: resnet50
+  params:
+    pretrained: true
+    dropout: 0.3
+    weight_decay: 1.0e-4
+
+training:
+  freeze_epochs: 2
+  epochs: 15
+  batch_size: 32
+  learning_rate: 1.0e-4
+  head_learning_rate: 1.0e-3
+  patience: 5
+  augmentation: [flip, rotate]

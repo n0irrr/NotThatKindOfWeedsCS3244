@@ -1,0 +1,42 @@
+device: mps, params: 23,526,473, train images: 10562, augmentation: none
+  epoch  1  train loss 0.961 acc 0.679  val loss 1.092 macro F1 0.4300 *  (34s)
+  epoch  2  train loss 0.674 acc 0.763  val loss 1.061 macro F1 0.5255 *  (22s)
+  stage -> full (lr 1.0e-04)
+  epoch  3  train loss 0.741 acc 0.757  val loss 1.207 macro F1 0.5756 *  (69s)
+  epoch  4  train loss 0.248 acc 0.918  val loss 1.115 macro F1 0.6127 *  (67s)
+  epoch  5  train loss 0.109 acc 0.966  val loss 1.419 macro F1 0.6028  (63s)
+  epoch  6  train loss 0.060 acc 0.980  val loss 1.437 macro F1 0.6115  (63s)
+  epoch  7  train loss 0.037 acc 0.990  val loss 1.725 macro F1 0.6166 *  (62s)
+  epoch  8  train loss 0.026 acc 0.992  val loss 1.476 macro F1 0.6430 *  (61s)
+  epoch  9  train loss 0.023 acc 0.993  val loss 1.615 macro F1 0.6348  (61s)
+  epoch 10  train loss 0.017 acc 0.996  val loss 1.724 macro F1 0.6263  (63s)
+  epoch 11  train loss 0.019 acc 0.995  val loss 1.461 macro F1 0.6418  (62s)
+  epoch 12  train loss 0.015 acc 0.996  val loss 1.637 macro F1 0.6424  (62s)
+  epoch 13  train loss 0.010 acc 0.998  val loss 1.665 macro F1 0.6408  (62s)
+  early stop: no val macro F1 gain for 5 epochs
+best epoch 8, val macro F1 0.6430
+
+                              macro_f1 macro_precision    macro_recall        accuracy
+val model                       0.6430          0.6501          0.6549          0.6907
+val majority_baseline           0.0764          0.0582          0.1111          0.5242
+test model                      0.7144          0.7143          0.7271          0.7617
+test majority_baseline          0.0765          0.0583          0.1111          0.5246
+
+test per-class F1:
+  Chinee apple     F1=0.559  P=0.481  R=0.667  n=225
+  Lantana          F1=0.790  P=0.870  R=0.723  n=213
+  Parkinsonia      F1=0.819  P=0.906  R=0.748  n=206
+  Parthenium       F1=0.460  P=0.438  R=0.486  n=173
+  Prickly acacia   F1=0.659  P=0.566  R=0.789  n=213
+  Rubber vine      F1=0.765  P=0.789  R=0.743  n=202
+  Siam weed        F1=0.900  P=0.922  R=0.879  n=215
+  Snake weed       F1=0.650  P=0.597  R=0.714  n=203
+  Negative         F1=0.827  P=0.861  R=0.796  n=1821
+top test confusions (true -> pred):
+  Negative -> Chinee apple: 102
+  Negative -> Parthenium: 86
+  Negative -> Prickly acacia: 83
+  Negative -> Snake weed: 51
+  Parthenium -> Negative: 49
+
+saved results/metrics/resnet50.json and confusion matrix (766.9s total)

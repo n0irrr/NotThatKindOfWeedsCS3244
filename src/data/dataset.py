@@ -46,16 +46,16 @@ class DeepWeedsDataset:
         return img, int(self.targets[i])
 
 
-def build_datasets(config) -> dict[str, DeepWeedsDataset]:
+def build_datasets(config, root=ROOT) -> dict[str, DeepWeedsDataset]:
     """train/val/test datasets for a config: train gets the training transforms
     (with any augmentation), val and test get the eval transforms."""
     from src.features.augment import get_eval_transforms, get_train_transforms
 
-    data = config["data"]
+    data, root = config["data"], Path(root)
     return {
         split: DeepWeedsDataset(
-            ROOT / data["splits_dir"] / f"{split}.csv", ROOT / data["images_dir"], config["classes"],
-            get_train_transforms(config) if split == "train" else get_eval_transforms(config))
+            root / data["splits_dir"] / f"{split}.csv", root / data["images_dir"], config["classes"],
+            get_train_transforms(config, root) if split == "train" else get_eval_transforms(config, root=root))
         for split in SPLITS
     }
 

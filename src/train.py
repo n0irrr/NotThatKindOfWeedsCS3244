@@ -106,43 +106,41 @@ def run_cnn(config, eval_only=False, resume=False):
 
     import torch
     import torch.nn as nn
-    from torch.utils.data import DataLoader, TensorDataset
+    from torch.utils.data import DataLoader
+
+    from src.data.dataset import build_datasets
+    from src.features.augment import train_stats_path
 
     seed_everything(config["seed"])
     device = get_device()
     tr_cfg, params = config["training"], config["model"]["params"]
     run_name = config["run_name"]
 
-    images = load_images(config, tuple(config["data"]["image_size"]))
-    y_tr = images["train"][1]
-
-    # Pretrained backbones expect ImageNet stats; from-scratch models use train-only stats.
-    x_tr = images["train"][0]
-    if params.get("pretrained"):
-        mean, std = np.array([0.485, 0.456, 0.406]), np.array([0.229, 0.224, 0.225])
-    else:
-        mean, std = x_tr.reshape(-1, 3).mean(0) / 255, x_tr.reshape(-1, 3).std(0) / 255
-    mean = torch.tensor(mean, dtype=torch.float32, device=device).view(1, 3, 1, 1)
-    std = torch.tensor(std, dtype=torch.float32, device=device).view(1, 3, 1, 1)
+    # Images are decoded per batch and pass through the transforms in
+    # src/features/augment.py: resize, augmentation (train only), normalisation
+    # (data.normalise: train-only stats, or ImageNet stats for pretrained backbones).
+    if (config["data"].get("normalise", "train") == "train"
+            and not train_stats_path(config, ROOT).exists()):
+        from src.data.stats import save_train_stats
+        print(f"saved {save_train_stats(config, ROOT).relative_to(ROOT)}")
+    datasets = build_datasets(config, ROOT)
+    y_tr = datasets["train"].targets
+    num_workers = tr_cfg.get("num_workers", 0)
 
     def loader(split, shuffle):
-        x, y = images[split]
-        # Keep uint8 NHWC on CPU; convert per batch to save memory. Arrays from
-        # the npz cache are read-only, which is fine since nothing writes to them.
-        warnings.filterwarnings("ignore", message="The given NumPy array is not writable")
-        ds = TensorDataset(torch.from_numpy(x), torch.from_numpy(y).long())
         g = torch.Generator().manual_seed(config["seed"])
-        return DataLoader(ds, batch_size=tr_cfg["batch_size"], shuffle=shuffle, generator=g)
+        return DataLoader(datasets[split], batch_size=tr_cfg["batch_size"], shuffle=shuffle, generator=g,
+                          num_workers=num_workers, persistent_workers=num_workers > 0)
 
     def to_input(xb):
-        xb = xb.to(device).permute(0, 3, 1, 2).float().div_(255)
-        return (xb - mean) / std
+        return xb.to(device)
 
     loaders = {s: loader(s, s == "train") for s in SPLITS}
 
     model = build_model(config).to(device)
     n_params = sum(p.numel() for p in model.parameters())
-    print(f"device: {device}, params: {n_params:,}, train images: {x_tr.shape}")
+    print(f"device: {device}, params: {n_params:,}, train images: {len(y_tr)}, "
+          f"augmentation: {tr_cfg.get('augmentation') or 'none'}")
 
     criterion = nn.CrossEntropyLoss()
     # Stage "head": backbone frozen, head only at head_learning_rate (constant).
@@ -239,7 +237,7 @@ def run_cnn(config, eval_only=False, resume=False):
         scheduler.step()
 
         val_loss, val_pred = predict("val")
-        val_f1 = compute_metrics(images["val"][1], val_pred, config["classes"])["macro_f1"]
+        val_f1 = compute_metrics(datasets["val"].targets, val_pred, config["classes"])["macro_f1"]
         row = {"epoch": epoch, "train_loss": loss_sum / len(y_tr), "train_acc": correct / len(y_tr),
                "val_loss": val_loss, "val_macro_f1": val_f1}
         history.append(row)
@@ -268,7 +266,7 @@ def run_cnn(config, eval_only=False, resume=False):
     model.load_state_dict(torch.load(ckpt_path, map_location=device))
     if history:
         plot_curves(history, ROOT / "results" / "figures" / f"{run_name}_curves.png", run_name)
-    preds = {s: (images[s][1], predict(s)[1]) for s in ("val", "test")}
+    preds = {s: (datasets[s].targets, predict(s)[1]) for s in ("val", "test")}
     return preds, y_tr, {"best_epoch": best_epoch, "n_params": n_params,
                          "device": str(device), "history": history}
 

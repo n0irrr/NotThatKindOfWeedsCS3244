@@ -37,6 +37,7 @@ training:
   # Train split only. Any of: flip, rotate, crop, translate, colour, blur, noise
   # (see src/features/augment.py). Empty = reference run.
   augmentation: []
+  num_workers: 4           # CNN data loading: decode + augment in parallel (0 = main process)
 
 evaluation:
   metrics: [accuracy, macro_precision, macro_recall, macro_f1]
