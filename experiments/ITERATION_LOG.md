@@ -6,7 +6,7 @@ Rows 0–4 used split v1 (sklearn `StratifiedGroupKFold`), where all of val's Pa
 and all of test's Siam weed came from a single capture session each, and the seed had
 no effect. Rows 5+ use split v2 (`src/data/split.py`): no session is more than 25% of
 a class's val/test images, and every class spans 16+ sessions in val and in test.
-Compare new models against rows 5+; rows 3–4 need re-running on split v2.
+Compare new models against rows 5+; rows 8–9 are rows 3–4 re-run on split v2.
 
 | # | Date | Model | What changed | Macro F1 | Macro P | Macro R | Acc | Notes / hypothesis for next step |
 |---|------|-------|--------------|----------|---------|---------|-----|----------------------------------|
@@ -18,3 +18,5 @@ Compare new models against rows 5+; rows 3–4 need re-running on split v2.
 | 5 | 2026-10-17 | Majority class | Split v2 (only change vs #0) | 0.077 | 0.058 | 0.111 | 0.525 | Floor for split v2 rows |
 | 6 | 2026-10-17 | KNN (k=3, uniform) | Split v2 (only change vs #1) | 0.180 | 0.218 | 0.192 | 0.441 | Val 0.175 vs test 0.180, so the val/test gap is gone. Still tracks lighting: Negative -> Parkinsonia 264 |
 | 7 | 2026-10-17 | KNN (k=11, distance) | Split v2 (only change vs #2) | 0.453 | 0.493 | 0.437 | 0.581 | Test 0.499 -> 0.453 but val/test gap halves (0.406 vs 0.453): #2's test score was helped by a one-session Siam weed test set. Baseline for the CNN |
+| 8 | 2026-10-24 | Simple CNN (4 blocks, 1.2M params) | Split v2 (only change vs #3); clean 30-epoch run, no resume; best = epoch 28 | 0.735 | 0.748 | 0.747 | 0.790 | Down from 0.783 on v1, still +0.28 over KNN-hist (#7). Val F1 0.649 < test 0.735, so v2's val set is the harder one (same direction as #7). Train acc 0.97, still overfits. Errors flipped vs v1: now Negative -> weed (Snake weed 113, Prickly acacia 68, Chinee apple 50). Siam weed F1 0.90 even across 16+ sessions; weakest Parthenium 0.55, Snake weed 0.61. Next: augmentation |
+| 9 | 2026-10-24 | ResNet50 (ImageNet, 23.5M params) | Split v2 (only change vs #4); same 2-epoch head warm-up + full fine-tune, ran all 15 epochs; best = epoch 11 | 0.726 | 0.728 | 0.737 | 0.772 | Down from 0.787 on v1, now level with the simple CNN (#8, 0.735). Val F1 0.662 is a bit above #8 (0.649) and reached in 11 epochs / 25 min. Train acc 0.99+ from epoch 7 while val loss climbs from epoch 4, so pretraining alone isn't helping without regularisation. Parthenium collapses (F1 0.41; Negative -> Parthenium 130). Next: augmentation, then 224x224 |
