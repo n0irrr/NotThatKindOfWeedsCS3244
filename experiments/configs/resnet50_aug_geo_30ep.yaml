@@ -1,0 +1,23 @@
+# resnet50_aug_geo.yaml with 30 epochs instead of 15 and no early stopping
+# (#11 peaked at its last epoch). Merged on top of default.yaml.
+run_name: resnet50_aug_geo_30ep
+
+data:
+  image_size: [128, 128]
+  normalise: imagenet
+
+model:
+  name: resnet50
+  params:
+    pretrained: true
+    dropout: 0.3
+    weight_decay: 1.0e-4
+
+training:
+  freeze_epochs: 2
+  epochs: 30
+  batch_size: 32
+  learning_rate: 1.0e-4
+  head_learning_rate: 1.0e-3
+  patience: 30              # no early stopping, as for the simple CNN runs
+  augmentation: [flip, rotate]
