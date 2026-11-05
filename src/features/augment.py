@@ -14,6 +14,7 @@ the one-factor-at-a-time runs in the proposal (4.1.2) are just config edits:
     noise      additive Gaussian noise
 
 Augmentation is only ever applied to the training split.
+(train.py uses get_pixel_augment / get_float_augment / AugmentedImages below.)
 
 Normalisation (data.normalise):
     train     per-channel mean/std of the training split at data.image_size,
@@ -25,6 +26,7 @@ Normalisation (data.normalise):
 import json
 from pathlib import Path
 
+import numpy as np
 import torch
 from torchvision.transforms import v2
 
@@ -104,3 +106,51 @@ def get_train_transforms(config):
 def get_eval_transforms(config, normalise=True):
     """normalise=False gives the [0, 1] image the stats are computed on."""
     return _build(config, [], normalise)
+
+
+# ---------------------------------------------------------------------------
+# Augmentation for the cached-array training loop (src/train.py).
+#
+# train.py works on images that are already resized and cached as uint8 arrays,
+# so it cannot use get_train_transforms (which starts from the PIL file). These
+# helpers build only the random part, in the same order as _build:
+#     crop -> pixel augs (uint8)   |   float augs (after scaling to [0, 1])
+# They are used on the TRAIN split only; val/test batches are never touched.
+# ---------------------------------------------------------------------------
+
+def get_pixel_augment(config):
+    """Per-image transform for uint8 CHW tensors, or None if no pixel augmentation."""
+    augs = _augmentations(config)
+    size = tuple(config["data"]["image_size"])
+    ops = []
+    if "crop" in augs:
+        ops.append(v2.RandomResizedCrop(size, scale=(0.5, 1.0), antialias=True))
+    ops += [PIXEL_AUGS[a]() for a in augs if a in PIXEL_AUGS]
+    return v2.Compose(ops) if ops else None
+
+
+def get_float_augment(config):
+    """Transform for float [0, 1] batches (noise), or None."""
+    augs = _augmentations(config)
+    ops = [FLOAT_AUGS[a]() for a in augs if a in FLOAT_AUGS]
+    return v2.Compose(ops) if ops else None
+
+
+class AugmentedImages(torch.utils.data.Dataset):
+    """uint8 NHWC array + labels -> randomly augmented uint8 NHWC image + label.
+
+    Augmentation is applied per image, so every image in a batch gets its own random
+    flip / rotation / jitter (applying a transform to a whole batch tensor would give
+    all images the same one). Returns NHWC so the training loop's input code is the
+    same for augmented and plain batches."""
+
+    def __init__(self, x: np.ndarray, y: np.ndarray, pixel_aug):
+        self.x, self.y, self.pixel_aug = x, y, pixel_aug
+
+    def __len__(self):
+        return len(self.x)
+
+    def __getitem__(self, i):
+        img = torch.from_numpy(np.ascontiguousarray(self.x[i])).permute(2, 0, 1)   # CHW uint8
+        img = self.pixel_aug(img)
+        return img.permute(1, 2, 0).contiguous(), int(self.y[i])

@@ -93,6 +93,43 @@ def get_device():
     return torch.device("cpu")
 
 
+def norm_stats(config, x_train):
+    """Per-channel (mean, std) in [0, 1] units for the model input.
+
+    Pretrained backbones get the ImageNet statistics they were trained with; models
+    trained from scratch get the TRAIN split's own statistics (val/test never
+    contribute). Computed in chunks so a 128x128 train array doesn't need a
+    float64 copy of itself."""
+    if config["model"]["params"].get("pretrained"):
+        return np.array([0.485, 0.456, 0.406]), np.array([0.229, 0.224, 0.225])
+    total, total_sq, n = np.zeros(3), np.zeros(3), 0
+    for i in range(0, len(x_train), 512):
+        chunk = x_train[i:i + 512].reshape(-1, 3).astype(np.float64) / 255
+        total += chunk.sum(0)
+        total_sq += (chunk ** 2).sum(0)
+        n += len(chunk)
+    mean = total / n
+    return mean, np.sqrt(total_sq / n - mean ** 2)
+
+
+def class_weights(y_train, n_classes, mode):
+    """Loss weights from TRAIN label counts only (val/test labels never used).
+
+    none          plain cross-entropy
+    inverse       n / (K * count_c): every class counts equally ("balanced")
+    sqrt_inverse  square root of that: a gentler correction for the 52% Negative class
+    """
+    if mode in (None, False, "none"):
+        return None
+    counts = np.bincount(y_train, minlength=n_classes).astype(float)
+    w = counts.sum() / (n_classes * np.maximum(counts, 1))
+    if mode == "sqrt_inverse":
+        w = np.sqrt(w)
+    elif mode != "inverse":
+        raise ValueError(f"unknown training.class_weights {mode!r}; use none | inverse | sqrt_inverse")
+    return w
+
+
 def seed_everything(seed):
     import random
     import torch
@@ -108,6 +145,8 @@ def run_cnn(config, eval_only=False, resume=False):
     import torch.nn as nn
     from torch.utils.data import DataLoader, TensorDataset
 
+    from src.features.augment import AugmentedImages, get_float_augment, get_pixel_augment
+
     seed_everything(config["seed"])
     device = get_device()
     tr_cfg, params = config["training"], config["model"]["params"]
@@ -118,24 +157,29 @@ def run_cnn(config, eval_only=False, resume=False):
 
     # Pretrained backbones expect ImageNet stats; from-scratch models use train-only stats.
     x_tr = images["train"][0]
-    if params.get("pretrained"):
-        mean, std = np.array([0.485, 0.456, 0.406]), np.array([0.229, 0.224, 0.225])
-    else:
-        mean, std = x_tr.reshape(-1, 3).mean(0) / 255, x_tr.reshape(-1, 3).std(0) / 255
+    mean, std = norm_stats(config, x_tr)
     mean = torch.tensor(mean, dtype=torch.float32, device=device).view(1, 3, 1, 1)
     std = torch.tensor(std, dtype=torch.float32, device=device).view(1, 3, 1, 1)
+
+    pixel_aug, float_aug = get_pixel_augment(config), get_float_augment(config)
 
     def loader(split, shuffle):
         x, y = images[split]
         # Keep uint8 NHWC on CPU; convert per batch to save memory. Arrays from
         # the npz cache are read-only, which is fine since nothing writes to them.
         warnings.filterwarnings("ignore", message="The given NumPy array is not writable")
-        ds = TensorDataset(torch.from_numpy(x), torch.from_numpy(y).long())
+        if split == "train" and pixel_aug is not None:       # augmentation: train split only
+            ds = AugmentedImages(x, y, pixel_aug)
+        else:
+            ds = TensorDataset(torch.from_numpy(x), torch.from_numpy(y).long())
         g = torch.Generator().manual_seed(config["seed"])
-        return DataLoader(ds, batch_size=tr_cfg["batch_size"], shuffle=shuffle, generator=g)
+        return DataLoader(ds, batch_size=tr_cfg["batch_size"], shuffle=shuffle, generator=g,
+                          num_workers=tr_cfg.get("num_workers", 0))
 
-    def to_input(xb):
+    def to_input(xb, train=False):
         xb = xb.to(device).permute(0, 3, 1, 2).float().div_(255)
+        if train and float_aug is not None:                  # noise: independent per element
+            xb = float_aug(xb)
         return (xb - mean) / std
 
     loaders = {s: loader(s, s == "train") for s in SPLITS}
@@ -144,7 +188,12 @@ def run_cnn(config, eval_only=False, resume=False):
     n_params = sum(p.numel() for p in model.parameters())
     print(f"device: {device}, params: {n_params:,}, train images: {x_tr.shape}")
 
-    criterion = nn.CrossEntropyLoss()
+    cw_mode = tr_cfg.get("class_weights", "none")
+    cw = class_weights(y_tr, len(config["classes"]), cw_mode)      # from train labels only
+    criterion = nn.CrossEntropyLoss(
+        weight=None if cw is None else torch.tensor(cw, dtype=torch.float32, device=device))
+    eval_criterion = nn.CrossEntropyLoss()   # val loss is only logged; keep it unweighted so runs compare
+    print(f"augmentation: {tr_cfg.get('augmentation') or 'none'}   class weights: {cw_mode}")
     # Stage "head": backbone frozen, head only at head_learning_rate (constant).
     # Stage "full": everything trainable, learning_rate with cosine decay over the
     # remaining epochs. freeze_epochs=0 (the default) means "full" throughout.
@@ -175,7 +224,7 @@ def run_cnn(config, eval_only=False, resume=False):
         losses, preds = [], []
         for xb, yb in loaders[split]:
             out = model(to_input(xb))
-            losses.append(criterion(out, yb.to(device)).item() * len(yb))
+            losses.append(eval_criterion(out, yb.to(device)).item() * len(yb))
             preds.append(out.argmax(1).cpu().numpy())
         return float(np.sum(losses) / len(loaders[split].dataset)), np.concatenate(preds)
 
@@ -229,7 +278,7 @@ def run_cnn(config, eval_only=False, resume=False):
         loss_sum, correct = 0.0, 0
         for xb, yb in loaders["train"]:
             yb = yb.to(device)
-            out = model(to_input(xb))
+            out = model(to_input(xb, train=True))
             loss = criterion(out, yb)
             optimizer.zero_grad()
             loss.backward()

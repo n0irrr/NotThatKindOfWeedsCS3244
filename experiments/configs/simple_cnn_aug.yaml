@@ -1,0 +1,24 @@
+# simple_cnn with training-time augmentation. Everything else identical to simple_cnn.yaml,
+# so augmentation is the only factor changed. Merged on top of default.yaml.
+# flip + rotate: field photos have no canonical orientation.
+# colour: the EDA found a per-class brightness shift (a lighting/site shortcut); jitter makes it
+# less reliable as a cue. Add class_weights: sqrt_inverse as a SEPARATE run to test it alone.
+run_name: simple_cnn_aug
+
+data:
+  image_size: [128, 128]
+
+model:
+  name: simple_cnn
+  params:
+    channels: [32, 64, 128, 256]
+    dropout: 0.3
+    weight_decay: 1.0e-4
+
+training:
+  epochs: 40            # augmented runs converge more slowly; early stopping still applies
+  batch_size: 64
+  learning_rate: 1.0e-3
+  patience: 8
+  augmentation: [flip, rotate, colour]
+  class_weights: none   # none | inverse | sqrt_inverse

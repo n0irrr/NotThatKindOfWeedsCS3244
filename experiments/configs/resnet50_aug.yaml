@@ -1,0 +1,24 @@
+# resnet50 with training-time augmentation. Everything else identical to resnet50.yaml.
+# The original run hit ~99.8% train accuracy while val loss stopped improving at epoch 4
+# (overfitting), which is what augmentation is for.
+run_name: resnet50_aug
+
+data:
+  image_size: [128, 128]
+
+model:
+  name: resnet50
+  params:
+    pretrained: true
+    dropout: 0.3
+    weight_decay: 1.0e-4
+
+training:
+  freeze_epochs: 2
+  epochs: 20
+  batch_size: 32
+  learning_rate: 1.0e-4
+  head_learning_rate: 1.0e-3
+  patience: 6
+  augmentation: [flip, rotate, colour]
+  class_weights: none   # none | inverse | sqrt_inverse
