@@ -16,5 +16,5 @@ training:
   epochs: 30
   batch_size: 64
   learning_rate: 1.0e-3
-  patience: 5
-  augmentation: false
+  patience: 30              # no early stopping: val F1 is noisy until the cosine LR decays
+  augmentation: []

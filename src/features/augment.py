@@ -56,19 +56,19 @@ FLOAT_AUGS = {
 AUGMENTATIONS = {"crop", *PIXEL_AUGS, *FLOAT_AUGS}
 
 
-def train_stats_path(config) -> Path:
+def train_stats_path(config, root=ROOT) -> Path:
     h, w = config["data"]["image_size"]
-    return ROOT / config["data"]["splits_dir"] / f"train_stats_{h}x{w}.json"
+    return Path(root) / config["data"]["splits_dir"] / f"train_stats_{h}x{w}.json"
 
 
-def normalisation(config):
+def normalisation(config, root=ROOT):
     """(mean, std) per channel, as selected by config["data"]["normalise"]."""
     mode = config["data"].get("normalise", "train")
     if mode == "imagenet":
         return IMAGENET_MEAN, IMAGENET_STD
     if mode != "train":
         raise ValueError(f"unknown data.normalise {mode!r}; use 'train' or 'imagenet'")
-    stats_path = train_stats_path(config)
+    stats_path = train_stats_path(config, root)
     if not stats_path.exists():
         raise FileNotFoundError(f"{stats_path} missing: run python -m src.data.stats --config <your config>")
     stats = json.loads(stats_path.read_text())
@@ -83,7 +83,7 @@ def _augmentations(config):
     return augs
 
 
-def _build(config, augs, normalise=True):
+def _build(config, augs, normalise=True, root=ROOT):
     size = tuple(config["data"]["image_size"])
     resize = (v2.RandomResizedCrop(size, scale=(0.5, 1.0), antialias=True) if "crop" in augs
               else v2.Resize(size, antialias=True))
@@ -93,14 +93,14 @@ def _build(config, augs, normalise=True):
         *[PIXEL_AUGS[a]() for a in augs if a in PIXEL_AUGS],
         v2.ToDtype(torch.float32, scale=True),
         *[FLOAT_AUGS[a]() for a in augs if a in FLOAT_AUGS],
-        *([v2.Normalize(*normalisation(config))] if normalise else []),
+        *([v2.Normalize(*normalisation(config, root))] if normalise else []),
     ])
 
 
-def get_train_transforms(config):
-    return _build(config, _augmentations(config))
+def get_train_transforms(config, root=ROOT):
+    return _build(config, _augmentations(config), root=root)
 
 
-def get_eval_transforms(config, normalise=True):
+def get_eval_transforms(config, normalise=True, root=ROOT):
     """normalise=False gives the [0, 1] image the stats are computed on."""
-    return _build(config, [], normalise)
+    return _build(config, [], normalise, root)

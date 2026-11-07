@@ -1,0 +1,87 @@
+device: mps, params: 1,175,529, train images: 10562, augmentation: ['flip', 'rotate']
+  epoch  1  train loss 1.265 acc 0.558  val loss 1.672 macro F1 0.2360 *  (40s)
+  epoch  2  train loss 1.111 acc 0.606  val loss 1.440 macro F1 0.3401 *  (29s)
+  epoch  3  train loss 0.992 acc 0.648  val loss 1.413 macro F1 0.3821 *  (28s)
+  epoch  4  train loss 0.911 acc 0.674  val loss 1.833 macro F1 0.3426  (28s)
+  epoch  5  train loss 0.848 acc 0.695  val loss 1.328 macro F1 0.3814  (28s)
+  epoch  6  train loss 0.770 acc 0.728  val loss 1.504 macro F1 0.4196 *  (28s)
+  epoch  7  train loss 0.728 acc 0.736  val loss 2.155 macro F1 0.3964  (28s)
+  epoch  8  train loss 0.672 acc 0.757  val loss 1.618 macro F1 0.2365  (29s)
+  epoch  9  train loss 0.693 acc 0.757  val loss 1.250 macro F1 0.4230 *  (28s)
+  epoch 10  train loss 0.611 acc 0.787  val loss 2.164 macro F1 0.3276  (28s)
+  epoch 11  train loss 0.688 acc 0.761  val loss 1.458 macro F1 0.4601 *  (28s)
+  epoch 12  train loss 0.581 acc 0.798  val loss 1.293 macro F1 0.4575  (28s)
+  epoch 13  train loss 0.597 acc 0.794  val loss 1.162 macro F1 0.4634 *  (28s)
+  epoch 14  train loss 0.501 acc 0.824  val loss 1.215 macro F1 0.4806 *  (28s)
+  epoch 15  train loss 0.482 acc 0.832  val loss 1.465 macro F1 0.4262  (28s)
+  epoch 16  train loss 0.472 acc 0.835  val loss 1.608 macro F1 0.5207 *  (28s)
+  epoch 17  train loss 0.432 acc 0.850  val loss 1.804 macro F1 0.4228  (28s)
+  epoch 18  train loss 0.458 acc 0.843  val loss 1.181 macro F1 0.5520 *  (28s)
+  epoch 19  train loss 0.442 acc 0.848  val loss 1.102 macro F1 0.5621 *  (28s)
+  epoch 20  train loss 0.384 acc 0.870  val loss 1.840 macro F1 0.5059  (28s)
+  epoch 21  train loss 0.390 acc 0.868  val loss 1.318 macro F1 0.5122  (28s)
+  epoch 22  train loss 0.347 acc 0.877  val loss 1.465 macro F1 0.5140  (28s)
+  epoch 23  train loss 0.350 acc 0.879  val loss 1.018 macro F1 0.5889 *  (28s)
+  epoch 24  train loss 0.336 acc 0.882  val loss 1.157 macro F1 0.5662  (28s)
+  epoch 25  train loss 0.303 acc 0.894  val loss 1.219 macro F1 0.5867  (28s)
+  epoch 26  train loss 0.325 acc 0.887  val loss 1.071 macro F1 0.6209 *  (28s)
+  epoch 27  train loss 0.311 acc 0.895  val loss 1.461 macro F1 0.5522  (28s)
+  epoch 28  train loss 0.345 acc 0.886  val loss 1.110 macro F1 0.6114  (28s)
+  epoch 29  train loss 0.280 acc 0.899  val loss 1.235 macro F1 0.5664  (28s)
+  epoch 30  train loss 0.308 acc 0.893  val loss 1.640 macro F1 0.5332  (28s)
+  epoch 31  train loss 0.265 acc 0.910  val loss 1.225 macro F1 0.6318 *  (28s)
+  epoch 32  train loss 0.253 acc 0.912  val loss 0.995 macro F1 0.5941  (28s)
+  epoch 33  train loss 0.252 acc 0.912  val loss 1.220 macro F1 0.6230  (28s)
+  epoch 34  train loss 0.220 acc 0.923  val loss 1.095 macro F1 0.5986  (28s)
+  epoch 35  train loss 0.229 acc 0.922  val loss 0.953 macro F1 0.6573 *  (28s)
+  epoch 36  train loss 0.225 acc 0.922  val loss 1.081 macro F1 0.6268  (28s)
+  epoch 37  train loss 0.206 acc 0.929  val loss 0.988 macro F1 0.6571  (28s)
+  epoch 38  train loss 0.215 acc 0.926  val loss 0.984 macro F1 0.6256  (28s)
+  epoch 39  train loss 0.194 acc 0.930  val loss 1.238 macro F1 0.6480  (28s)
+  epoch 40  train loss 0.186 acc 0.937  val loss 1.010 macro F1 0.6658 *  (28s)
+  epoch 41  train loss 0.162 acc 0.946  val loss 0.995 macro F1 0.6474  (28s)
+  epoch 42  train loss 0.180 acc 0.940  val loss 1.071 macro F1 0.6392  (28s)
+  epoch 43  train loss 0.160 acc 0.945  val loss 1.057 macro F1 0.6601  (28s)
+  epoch 44  train loss 0.142 acc 0.953  val loss 1.079 macro F1 0.6589  (28s)
+  epoch 45  train loss 0.145 acc 0.951  val loss 0.916 macro F1 0.6829 *  (28s)
+  epoch 46  train loss 0.148 acc 0.951  val loss 1.039 macro F1 0.6797  (28s)
+  epoch 47  train loss 0.140 acc 0.953  val loss 0.953 macro F1 0.6665  (28s)
+  epoch 48  train loss 0.136 acc 0.955  val loss 0.921 macro F1 0.6947 *  (28s)
+  epoch 49  train loss 0.120 acc 0.960  val loss 0.950 macro F1 0.6795  (28s)
+  epoch 50  train loss 0.118 acc 0.963  val loss 1.120 macro F1 0.6782  (28s)
+  epoch 51  train loss 0.115 acc 0.964  val loss 0.960 macro F1 0.6918  (28s)
+  epoch 52  train loss 0.115 acc 0.963  val loss 0.960 macro F1 0.6936  (28s)
+  epoch 53  train loss 0.110 acc 0.966  val loss 1.061 macro F1 0.6815  (28s)
+  epoch 54  train loss 0.107 acc 0.966  val loss 0.865 macro F1 0.6974 *  (28s)
+  epoch 55  train loss 0.103 acc 0.967  val loss 1.028 macro F1 0.6843  (28s)
+  epoch 56  train loss 0.104 acc 0.966  val loss 1.043 macro F1 0.6820  (29s)
+  epoch 57  train loss 0.107 acc 0.966  val loss 0.995 macro F1 0.6824  (28s)
+  epoch 58  train loss 0.105 acc 0.968  val loss 0.997 macro F1 0.6821  (28s)
+  epoch 59  train loss 0.100 acc 0.969  val loss 1.033 macro F1 0.6786  (28s)
+  epoch 60  train loss 0.102 acc 0.966  val loss 1.110 macro F1 0.6744  (28s)
+best epoch 54, val macro F1 0.6974
+
+                              macro_f1 macro_precision    macro_recall        accuracy
+val model                       0.6974          0.7089          0.7030          0.7569
+val majority_baseline           0.0764          0.0582          0.1111          0.5242
+test model                      0.7753          0.7779          0.7859          0.8231
+test majority_baseline          0.0765          0.0583          0.1111          0.5246
+
+test per-class F1:
+  Chinee apple     F1=0.693  P=0.657  R=0.733  n=225
+  Lantana          F1=0.830  P=0.906  R=0.765  n=213
+  Parkinsonia      F1=0.862  P=0.860  R=0.864  n=206
+  Parthenium       F1=0.489  P=0.534  R=0.451  n=173
+  Prickly acacia   F1=0.754  P=0.635  R=0.930  n=213
+  Rubber vine      F1=0.834  P=0.944  R=0.748  n=202
+  Siam weed        F1=0.923  P=0.925  R=0.921  n=215
+  Snake weed       F1=0.716  P=0.647  R=0.803  n=203
+  Negative         F1=0.876  P=0.894  R=0.858  n=1821
+top test confusions (true -> pred):
+  Negative -> Parthenium: 62
+  Negative -> Prickly acacia: 55
+  Negative -> Snake weed: 54
+  Negative -> Chinee apple: 52
+  Parthenium -> Prickly acacia: 45
+
+saved results/metrics/simple_cnn_aug_geo_60ep.json and confusion matrix (1710.1s total)

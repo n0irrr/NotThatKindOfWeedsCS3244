@@ -4,6 +4,7 @@ run_name: resnet50
 
 data:
   image_size: [128, 128]
+  normalise: imagenet       # match the stats the backbone was pretrained with
 
 model:
   name: resnet50
@@ -19,4 +20,4 @@ training:
   learning_rate: 1.0e-4     # full fine-tuning
   head_learning_rate: 1.0e-3
   patience: 5
-  augmentation: false
+  augmentation: []

@@ -1,0 +1,21 @@
+# simple_cnn_aug_geo.yaml with 60 epochs instead of 30 (only change).
+# Tests whether augmentation needs a longer schedule to help a from-scratch CNN.
+# Merged on top of default.yaml.
+run_name: simple_cnn_aug_geo_60ep
+
+data:
+  image_size: [128, 128]
+
+model:
+  name: simple_cnn
+  params:
+    channels: [32, 64, 128, 256]
+    dropout: 0.3
+    weight_decay: 1.0e-4
+
+training:
+  epochs: 60
+  batch_size: 64
+  learning_rate: 1.0e-3
+  patience: 60              # no early stopping: val F1 is noisy until the cosine LR decays
+  augmentation: [flip, rotate]

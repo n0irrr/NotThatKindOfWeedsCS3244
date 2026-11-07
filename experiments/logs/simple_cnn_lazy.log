@@ -1,0 +1,44 @@
+train stats:   0%|          | 0/10562 [00:00<?, ?it/s]train stats:   1%|▏         | 148/10562 [00:00<00:07, 1473.06it/s]train stats:   3%|▎         | 300/10562 [00:00<00:06, 1496.00it/s]train stats:   4%|▍         | 461/10562 [00:00<00:06, 1547.41it/s]train stats:   6%|▌         | 629/10562 [00:00<00:06, 1595.34it/s]train stats:   8%|▊         | 800/10562 [00:00<00:05, 1635.78it/s]train stats:   9%|▉         | 965/10562 [00:00<00:05, 1638.99it/s]train stats:  11%|█         | 1129/10562 [00:00<00:05, 1623.31it/s]train stats:  12%|█▏        | 1292/10562 [00:00<00:05, 1593.34it/s]train stats:  14%|█▎        | 1452/10562 [00:00<00:05, 1587.10it/s]train stats:  15%|█▌        | 1613/10562 [00:01<00:05, 1593.81it/s]train stats:  17%|█▋        | 1773/10562 [00:01<00:05, 1548.85it/s]train stats:  18%|█▊        | 1929/10562 [00:01<00:05, 1534.17it/s]train stats:  20%|█▉        | 2083/10562 [00:01<00:05, 1527.81it/s]train stats:  21%|██        | 2237/10562 [00:01<00:05, 1531.01it/s]train stats:  23%|██▎       | 2391/10562 [00:01<00:05, 1520.34it/s]train stats:  24%|██▍       | 2553/10562 [00:01<00:05, 1549.57it/s]train stats:  26%|██▌       | 2709/10562 [00:01<00:05, 1540.99it/s]train stats:  27%|██▋       | 2864/10562 [00:01<00:05, 1422.85it/s]train stats:  29%|██▊       | 3021/10562 [00:01<00:05, 1463.61it/s]train stats:  30%|███       | 3175/10562 [00:02<00:04, 1484.15it/s]train stats:  31%|███▏      | 3326/10562 [00:02<00:04, 1491.56it/s]train stats:  33%|███▎      | 3483/10562 [00:02<00:04, 1512.82it/s]train stats:  34%|███▍      | 3635/10562 [00:02<00:04, 1498.97it/s]train stats:  36%|███▌      | 3786/10562 [00:02<00:04, 1496.56it/s]train stats:  37%|███▋      | 3938/10562 [00:02<00:04, 1500.78it/s]train stats:  39%|███▉      | 4095/10562 [00:02<00:04, 1518.77it/s]train stats:  40%|████      | 4255/10562 [00:02<00:04, 1541.94it/s]train stats:  42%|████▏     | 4423/10562 [00:02<00:03, 1582.14it/s]train stats:  43%|████▎     | 4589/10562 [00:02<00:03, 1604.08it/s]train stats:  45%|████▍     | 4750/10562 [00:03<00:03, 1602.37it/s]train stats:  47%|████▋     | 4913/10562 [00:03<00:03, 1610.34it/s]train stats:  48%|████▊     | 5077/10562 [00:03<00:03, 1616.89it/s]train stats:  50%|████▉     | 5239/10562 [00:03<00:03, 1613.98it/s]train stats:  51%|█████     | 5401/10562 [00:03<00:03, 1614.36it/s]train stats:  53%|█████▎    | 5563/10562 [00:03<00:03, 1606.14it/s]train stats:  54%|█████▍    | 5727/10562 [00:03<00:02, 1613.00it/s]train stats:  56%|█████▌    | 5892/10562 [00:03<00:02, 1621.99it/s]train stats:  57%|█████▋    | 6057/10562 [00:03<00:02, 1630.21it/s]train stats:  59%|█████▉    | 6223/10562 [00:03<00:02, 1637.65it/s]train stats:  60%|██████    | 6389/10562 [00:04<00:02, 1642.06it/s]train stats:  62%|██████▏   | 6554/10562 [00:04<00:02, 1527.97it/s]train stats:  64%|██████▎   | 6714/10562 [00:04<00:02, 1548.33it/s]train stats:  65%|██████▌   | 6871/10562 [00:04<00:02, 1547.36it/s]train stats:  67%|██████▋   | 7030/10562 [00:04<00:02, 1557.34it/s]train stats:  68%|██████▊   | 7198/10562 [00:04<00:02, 1592.06it/s]train stats:  70%|██████▉   | 7364/10562 [00:04<00:01, 1610.35it/s]train stats:  71%|███████▏  | 7531/10562 [00:04<00:01, 1626.52it/s]train stats:  73%|███████▎  | 7698/10562 [00:04<00:01, 1639.17it/s]train stats:  74%|███████▍  | 7863/10562 [00:05<00:01, 1639.49it/s]train stats:  76%|███████▌  | 8028/10562 [00:05<00:01, 1637.23it/s]train stats:  78%|███████▊  | 8196/10562 [00:05<00:01, 1648.66it/s]train stats:  79%|███████▉  | 8364/10562 [00:05<00:01, 1656.94it/s]train stats:  81%|████████  | 8532/10562 [00:05<00:01, 1661.27it/s]train stats:  82%|████████▏ | 8699/10562 [00:05<00:01, 1653.41it/s]train stats:  84%|████████▍ | 8865/10562 [00:05<00:01, 1640.19it/s]train stats:  85%|████████▌ | 9030/10562 [00:05<00:00, 1640.64it/s]train stats:  87%|████████▋ | 9195/10562 [00:05<00:00, 1631.93it/s]train stats:  89%|████████▊ | 9359/10562 [00:05<00:00, 1628.59it/s]train stats:  90%|█████████ | 9522/10562 [00:06<00:00, 1533.19it/s]train stats:  92%|█████████▏| 9687/10562 [00:06<00:00, 1565.55it/s]train stats:  93%|█████████▎| 9848/10562 [00:06<00:00, 1577.74it/s]train stats:  95%|█████████▍| 10007/10562 [00:06<00:00, 1579.87it/s]train stats:  96%|█████████▋| 10168/10562 [00:06<00:00, 1585.93it/s]train stats:  98%|█████████▊| 10327/10562 [00:06<00:00, 1584.96it/s]train stats:  99%|█████████▉| 10486/10562 [00:06<00:00, 1584.24it/s]train stats: 100%|██████████| 10562/10562 [00:06<00:00, 1578.92it/s]
+saved data/splits/train_stats_128x128.json
+device: mps, params: 1,175,529, train images: 10562, augmentation: none
+  epoch  1  train loss 1.261 acc 0.562  val loss 1.828 macro F1 0.2378 *  (39s)
+  epoch  2  train loss 1.097 acc 0.610  val loss 1.722 macro F1 0.2369  (28s)
+  epoch  3  train loss 0.986 acc 0.647  val loss 1.437 macro F1 0.2939 *  (28s)
+  epoch  4  train loss 0.884 acc 0.682  val loss 1.821 macro F1 0.3549 *  (28s)
+  epoch  5  train loss 0.823 acc 0.703  val loss 1.292 macro F1 0.3166  (28s)
+  epoch  6  train loss 0.747 acc 0.733  val loss 1.859 macro F1 0.3217  (28s)
+  epoch  7  train loss 0.683 acc 0.758  val loss 1.788 macro F1 0.3517  (28s)
+  epoch  8  train loss 0.623 acc 0.776  val loss 1.536 macro F1 0.3098  (28s)
+  epoch  9  train loss 0.622 acc 0.778  val loss 1.084 macro F1 0.5218 *  (28s)
+  epoch 10  train loss 0.548 acc 0.810  val loss 1.202 macro F1 0.4814  (29s)
+  epoch 11  train loss 0.551 acc 0.808  val loss 1.378 macro F1 0.5208  (28s)
+  epoch 12  train loss 0.471 acc 0.838  val loss 1.268 macro F1 0.4822  (28s)
+  epoch 13  train loss 0.476 acc 0.836  val loss 1.110 macro F1 0.4712  (28s)
+  epoch 14  train loss 0.403 acc 0.861  val loss 1.368 macro F1 0.4465  (28s)
+  early stop: no val macro F1 gain for 5 epochs
+best epoch 9, val macro F1 0.5218
+
+                              macro_f1 macro_precision    macro_recall        accuracy
+val model                       0.5218          0.5632          0.5279          0.6274
+val majority_baseline           0.0764          0.0582          0.1111          0.5242
+test model                      0.5608          0.6125          0.5690          0.6840
+test majority_baseline          0.0765          0.0583          0.1111          0.5246
+
+test per-class F1:
+  Chinee apple     F1=0.191  P=0.372  R=0.129  n=225
+  Lantana          F1=0.586  P=0.594  R=0.577  n=213
+  Parkinsonia      F1=0.660  P=0.723  R=0.607  n=206
+  Parthenium       F1=0.360  P=0.584  R=0.260  n=173
+  Prickly acacia   F1=0.633  P=0.528  R=0.789  n=213
+  Rubber vine      F1=0.610  P=0.836  R=0.480  n=202
+  Siam weed        F1=0.772  P=0.758  R=0.786  n=215
+  Snake weed       F1=0.427  P=0.311  R=0.680  n=203
+  Negative         F1=0.810  P=0.807  R=0.813  n=1821
+top test confusions (true -> pred):
+  Negative -> Snake weed: 149
+  Chinee apple -> Snake weed: 105
+  Negative -> Prickly acacia: 87
+  Lantana -> Negative: 75
+  Rubber vine -> Negative: 63
+
+saved results/metrics/simple_cnn.json and confusion matrix (483.6s total)
