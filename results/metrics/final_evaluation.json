@@ -1,0 +1,16 @@
+{
+  "selected": "resnet50_aug_geo_30ep",
+  "selected_by": "mean validation macro F1",
+  "published_accuracy": 0.957,
+  "test_macro_f1_mean": 0.7866939458659161,
+  "test_macro_f1_std": 0.0056239818936130994,
+  "test_accuracy_mean": 0.8154998559492942,
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "accuracy_gap_to_published": 0.14150014405070577
+}

@@ -339,9 +339,12 @@ def report(config, preds, y_train, extra, elapsed):
     print(f"\nsaved {metrics_path.relative_to(ROOT)} and confusion matrix ({elapsed:.1f}s total)")
 
 
-def main(config_path: str, eval_only: bool = False, resume: bool = False) -> None:
+def main(config_path: str, eval_only: bool = False, resume: bool = False, seed: int | None = None) -> None:
     config = load_config(config_path)
     config.setdefault("run_name", Path(config_path).stem)
+    if seed is not None:  # multi-seed runs: own checkpoint / metrics / figures per seed
+        config["seed"] = seed
+        config["run_name"] = f"{config['run_name']}_s{seed}"
     name = config["model"]["name"]
     if name not in RUNNERS:
         raise NotImplementedError(f"Training not implemented yet for model: {name}")
@@ -360,5 +363,7 @@ if __name__ == "__main__":
                         help="skip training; evaluate experiments/checkpoints/{run_name}.pt")
     parser.add_argument("--resume", action="store_true",
                         help="continue training from experiments/checkpoints/{run_name}[_last].pt")
+    parser.add_argument("--seed", type=int, default=None,
+                        help="override config seed; run_name becomes {run_name}_s{seed}")
     args = parser.parse_args()
-    main(args.config, args.eval_only, args.resume)
+    main(args.config, args.eval_only, args.resume, args.seed)
