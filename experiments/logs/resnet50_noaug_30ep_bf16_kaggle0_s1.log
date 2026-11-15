@@ -1,0 +1,58 @@
+device: xpu, params: 23,526,473, train images: 10501, augmentation: none, seed: 1, amp: bf16
+  epoch  1  train loss 1.006 acc 0.659  val loss 0.767 macro F1 0.6178 *  (205s)
+  epoch  2  train loss 0.731 acc 0.750  val loss 0.675 macro F1 0.6933 *  (83s)
+  stage -> full (lr 1.0e-04)
+  epoch  3  train loss 0.825 acc 0.723  val loss 0.522 macro F1 0.7690 *  (272s)
+  epoch  4  train loss 0.305 acc 0.899  val loss 0.423 macro F1 0.8128 *  (245s)
+  epoch  5  train loss 0.121 acc 0.962  val loss 0.441 macro F1 0.8233 *  (245s)
+  epoch  6  train loss 0.080 acc 0.973  val loss 0.475 macro F1 0.8218  (238s)
+  epoch  7  train loss 0.048 acc 0.986  val loss 0.455 macro F1 0.8331 *  (242s)
+  epoch  8  train loss 0.045 acc 0.985  val loss 0.466 macro F1 0.8371 *  (247s)
+  epoch  9  train loss 0.035 acc 0.989  val loss 0.482 macro F1 0.8317  (234s)
+  epoch 10  train loss 0.033 acc 0.990  val loss 0.451 macro F1 0.8450 *  (256s)
+  epoch 11  train loss 0.025 acc 0.992  val loss 0.438 macro F1 0.8558 *  (242s)
+  epoch 12  train loss 0.025 acc 0.993  val loss 0.471 macro F1 0.8439  (246s)
+  epoch 13  train loss 0.023 acc 0.993  val loss 0.478 macro F1 0.8559 *  (239s)
+  epoch 14  train loss 0.021 acc 0.994  val loss 0.426 macro F1 0.8598 *  (234s)
+  epoch 15  train loss 0.017 acc 0.995  val loss 0.461 macro F1 0.8533  (236s)
+  epoch 16  train loss 0.014 acc 0.996  val loss 0.456 macro F1 0.8644 *  (240s)
+  epoch 17  train loss 0.009 acc 0.997  val loss 0.428 macro F1 0.8717 *  (227s)
+  epoch 18  train loss 0.007 acc 0.998  val loss 0.460 macro F1 0.8682  (248s)
+  epoch 19  train loss 0.006 acc 0.998  val loss 0.456 macro F1 0.8638  (243s)
+  epoch 20  train loss 0.008 acc 0.998  val loss 0.458 macro F1 0.8675  (250s)
+  epoch 21  train loss 0.009 acc 0.997  val loss 0.434 macro F1 0.8606  (241s)
+  epoch 22  train loss 0.005 acc 0.998  val loss 0.431 macro F1 0.8662  (243s)
+  epoch 23  train loss 0.005 acc 0.999  val loss 0.432 macro F1 0.8753 *  (238s)
+  epoch 24  train loss 0.003 acc 0.999  val loss 0.432 macro F1 0.8750  (237s)
+  epoch 25  train loss 0.003 acc 0.999  val loss 0.418 macro F1 0.8720  (238s)
+  epoch 26  train loss 0.002 acc 1.000  val loss 0.444 macro F1 0.8740  (235s)
+  epoch 27  train loss 0.003 acc 0.999  val loss 0.416 macro F1 0.8756 *  (237s)
+  epoch 28  train loss 0.002 acc 0.999  val loss 0.422 macro F1 0.8708  (241s)
+  epoch 29  train loss 0.002 acc 1.000  val loss 0.441 macro F1 0.8745  (243s)
+  epoch 30  train loss 0.002 acc 1.000  val loss 0.419 macro F1 0.8735  (234s)
+best epoch 27, val macro F1 0.8756
+
+                              macro_f1 macro_precision    macro_recall        accuracy
+val model                       0.8756          0.8867          0.8654          0.9072
+val majority_baseline           0.0760          0.0578          0.1111          0.5201
+test model                      0.8705          0.8778          0.8654          0.9005
+test majority_baseline          0.0760          0.0577          0.1111          0.5195
+
+test per-class F1:
+  Chinee apple     F1=0.787  P=0.847  R=0.735  n=226
+  Lantana          F1=0.856  P=0.910  R=0.808  n=213
+  Parkinsonia      F1=0.946  P=0.922  R=0.971  n=207
+  Parthenium       F1=0.870  P=0.861  R=0.878  n=205
+  Prickly acacia   F1=0.868  P=0.904  R=0.836  n=213
+  Rubber vine      F1=0.890  P=0.861  R=0.921  n=202
+  Siam weed        F1=0.872  P=0.860  R=0.884  n=215
+  Snake weed       F1=0.812  P=0.810  R=0.814  n=204
+  Negative         F1=0.935  P=0.926  R=0.943  n=1822
+top test confusions (true -> pred):
+  Chinee apple -> Negative: 31
+  Negative -> Siam weed: 24
+  Lantana -> Negative: 23
+  Snake weed -> Negative: 22
+  Siam weed -> Negative: 21
+
+saved results\metrics\resnet50_noaug_30ep_bf16_kaggle0_s1.json, results\predictions\resnet50_noaug_30ep_bf16_kaggle0_s1_test.csv and confusion matrix (7177.0s total)

@@ -1,0 +1,22 @@
+# Simple CNN, no augmentation, 60 epochs, bfloat16. Kaggle split, fold 0. Merged on top of default.yaml.
+run_name: simple_cnn_noaug_60ep_bf16_kaggle0
+
+data:
+  splits_dir: data/splits_kaggle0   # Kaggle zip, labels/*_subset0.csv (src/data/kaggle_split.py)
+  image_size: [128, 128]
+
+model:
+  name: simple_cnn
+  params:
+    channels: [32, 64, 128, 256]
+    dropout: 0.3
+    weight_decay: 1.0e-4
+
+training:
+  epochs: 60
+  batch_size: 64
+  learning_rate: 1.0e-3
+  patience: 60              # no early stopping: val F1 is noisy until the cosine LR decays
+  augmentation: []
+  amp: bf16
+  channels_last: true

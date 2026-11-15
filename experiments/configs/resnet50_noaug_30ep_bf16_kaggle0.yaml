@@ -1,0 +1,25 @@
+# ResNet-50 (ImageNet), no augmentation, 30 epochs, bfloat16. Kaggle split, fold 0. Merged on top of default.yaml.
+run_name: resnet50_noaug_30ep_bf16_kaggle0
+
+data:
+  splits_dir: data/splits_kaggle0   # Kaggle zip, labels/*_subset0.csv (src/data/kaggle_split.py)
+  image_size: [128, 128]
+  normalise: imagenet
+
+model:
+  name: resnet50
+  params:
+    pretrained: true
+    dropout: 0.3
+    weight_decay: 1.0e-4
+
+training:
+  freeze_epochs: 2
+  epochs: 30
+  batch_size: 32
+  learning_rate: 1.0e-4
+  head_learning_rate: 1.0e-3
+  patience: 30              # no early stopping, as for the simple CNN runs
+  augmentation: []
+  amp: bf16
+  channels_last: true

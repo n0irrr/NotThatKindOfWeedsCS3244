@@ -7,6 +7,11 @@ scipy
 # Imaging
 Pillow
 opencv-python
+scikit-image          # HOG features
+
+# Explainability (notebooks/05_error_analysis.ipynb)
+grad-cam              # imports as pytorch_grad_cam
+lime
 
 # Deep learning (pick one backend; torch by default)
 torch

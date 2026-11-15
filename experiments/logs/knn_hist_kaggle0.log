@@ -1,0 +1,43 @@
+features: colour_histogram train (10501, 96), loaded in 11.0s
+  n_neighbors=1  weights=uniform  val macro F1=0.5795
+  n_neighbors=1  weights=distance  val macro F1=0.5795
+  n_neighbors=3  weights=uniform  val macro F1=0.5812
+  n_neighbors=3  weights=distance  val macro F1=0.5945
+  n_neighbors=5  weights=uniform  val macro F1=0.5988
+  n_neighbors=5  weights=distance  val macro F1=0.6076
+  n_neighbors=7  weights=uniform  val macro F1=0.5923
+  n_neighbors=7  weights=distance  val macro F1=0.6024
+  n_neighbors=11  weights=uniform  val macro F1=0.5940
+  n_neighbors=11  weights=distance  val macro F1=0.5973
+  n_neighbors=15  weights=uniform  val macro F1=0.5762
+  n_neighbors=15  weights=distance  val macro F1=0.5823
+  n_neighbors=21  weights=uniform  val macro F1=0.5648
+  n_neighbors=21  weights=distance  val macro F1=0.5708
+  n_neighbors=31  weights=uniform  val macro F1=0.5405
+  n_neighbors=31  weights=distance  val macro F1=0.5533
+best: n_neighbors=5, weights=distance
+
+                              macro_f1 macro_precision    macro_recall        accuracy
+val model                       0.6076          0.6412          0.5840          0.7164
+val majority_baseline           0.0760          0.0578          0.1111          0.5201
+test model                      0.6127          0.6501          0.5862          0.7208
+test majority_baseline          0.0760          0.0577          0.1111          0.5195
+
+test per-class F1:
+  Chinee apple     F1=0.427  P=0.519  R=0.363  n=226
+  Lantana          F1=0.624  P=0.680  R=0.577  n=213
+  Parkinsonia      F1=0.692  P=0.679  R=0.705  n=207
+  Parthenium       F1=0.607  P=0.641  R=0.576  n=205
+  Prickly acacia   F1=0.712  P=0.729  R=0.695  n=213
+  Rubber vine      F1=0.570  P=0.576  R=0.564  n=202
+  Siam weed        F1=0.577  P=0.686  R=0.498  n=215
+  Snake weed       F1=0.479  P=0.563  R=0.417  n=204
+  Negative         F1=0.827  P=0.779  R=0.881  n=1822
+top test confusions (true -> pred):
+  Chinee apple -> Negative: 77
+  Snake weed -> Negative: 74
+  Siam weed -> Negative: 72
+  Rubber vine -> Negative: 61
+  Lantana -> Negative: 59
+
+saved results\metrics\knn_hist_kaggle0.json, results\predictions\knn_hist_kaggle0_test.csv and confusion matrix (18.9s total)

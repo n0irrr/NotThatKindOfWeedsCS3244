@@ -1,0 +1,43 @@
+features: hog train (10501, 1764), loaded in 26.2s
+  n_neighbors=1  weights=uniform  val macro F1=0.1250
+  n_neighbors=1  weights=distance  val macro F1=0.1250
+  n_neighbors=3  weights=uniform  val macro F1=0.1148
+  n_neighbors=3  weights=distance  val macro F1=0.1154
+  n_neighbors=5  weights=uniform  val macro F1=0.1030
+  n_neighbors=5  weights=distance  val macro F1=0.1005
+  n_neighbors=7  weights=uniform  val macro F1=0.0931
+  n_neighbors=7  weights=distance  val macro F1=0.0880
+  n_neighbors=11  weights=uniform  val macro F1=0.0798
+  n_neighbors=11  weights=distance  val macro F1=0.0788
+  n_neighbors=15  weights=uniform  val macro F1=0.0758
+  n_neighbors=15  weights=distance  val macro F1=0.0759
+  n_neighbors=21  weights=uniform  val macro F1=0.0759
+  n_neighbors=21  weights=distance  val macro F1=0.0760
+  n_neighbors=31  weights=uniform  val macro F1=0.0760
+  n_neighbors=31  weights=distance  val macro F1=0.0760
+best: n_neighbors=1, weights=uniform
+
+                              macro_f1 macro_precision    macro_recall        accuracy
+val model                       0.1250          0.1522          0.1302          0.3985
+val majority_baseline           0.0760          0.0578          0.1111          0.5201
+test model                      0.1283          0.1493          0.1314          0.3884
+test majority_baseline          0.0760          0.0577          0.1111          0.5195
+
+test per-class F1:
+  Chinee apple     F1=0.085  P=0.120  R=0.066  n=226
+  Lantana          F1=0.044  P=0.103  R=0.028  n=213
+  Parkinsonia      F1=0.102  P=0.091  R=0.116  n=207
+  Parthenium       F1=0.067  P=0.061  R=0.073  n=205
+  Prickly acacia   F1=0.094  P=0.090  R=0.099  n=213
+  Rubber vine      F1=0.034  P=0.121  R=0.020  n=202
+  Siam weed        F1=0.083  P=0.160  R=0.056  n=215
+  Snake weed       F1=0.045  P=0.065  R=0.034  n=204
+  Negative         F1=0.600  P=0.531  R=0.690  n=1822
+top test confusions (true -> pred):
+  Parthenium -> Negative: 156
+  Parkinsonia -> Negative: 148
+  Negative -> Parkinsonia: 148
+  Chinee apple -> Negative: 146
+  Prickly acacia -> Negative: 143
+
+saved results\metrics\knn_hog_kaggle0.json, results\predictions\knn_hog_kaggle0_test.csv and confusion matrix (97.0s total)

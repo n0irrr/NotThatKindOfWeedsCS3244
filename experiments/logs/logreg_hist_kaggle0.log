@@ -1,0 +1,34 @@
+features: colour_histogram train (10501, 96), loaded in 25.2s
+  C=0.001  val macro F1=0.2671
+  C=0.01  val macro F1=0.3527
+  C=0.1  val macro F1=0.3813
+  C=1  val macro F1=0.3838
+  C=10  val macro F1=0.3837
+  C=100  val macro F1=0.3804
+  C=1000  val macro F1=0.3816
+best: C=1
+
+                              macro_f1 macro_precision    macro_recall        accuracy
+val model                       0.3838          0.4753          0.3504          0.5973
+val majority_baseline           0.0760          0.0578          0.1111          0.5201
+test model                      0.3746          0.4639          0.3413          0.5954
+test majority_baseline          0.0760          0.0577          0.1111          0.5195
+
+test per-class F1:
+  Chinee apple     F1=0.197  P=0.271  R=0.155  n=226
+  Lantana          F1=0.259  P=0.398  R=0.192  n=213
+  Parkinsonia      F1=0.521  P=0.565  R=0.483  n=207
+  Parthenium       F1=0.345  P=0.520  R=0.259  n=205
+  Prickly acacia   F1=0.603  P=0.626  R=0.582  n=213
+  Rubber vine      F1=0.146  P=0.322  R=0.094  n=202
+  Siam weed        F1=0.344  P=0.524  R=0.256  n=215
+  Snake weed       F1=0.207  P=0.305  R=0.157  n=204
+  Negative         F1=0.749  P=0.644  R=0.894  n=1822
+top test confusions (true -> pred):
+  Rubber vine -> Negative: 156
+  Siam weed -> Negative: 144
+  Lantana -> Negative: 131
+  Chinee apple -> Negative: 128
+  Snake weed -> Negative: 105
+
+saved results\metrics\logreg_hist_kaggle0.json, results\predictions\logreg_hist_kaggle0_test.csv and confusion matrix (46.2s total)

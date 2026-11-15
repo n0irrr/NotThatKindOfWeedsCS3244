@@ -1,6 +1,6 @@
 """Hand-crafted feature representations for classical ML baselines.
 
-Per the proposal: flattened pixels, downsampled pixels, colour histograms.
+Per the proposal: downsampled pixels, colour histograms (colour), HOG (shape/texture).
 """
 import numpy as np
 from PIL import Image
@@ -25,7 +25,26 @@ def colour_histogram(images, bins=32):
     return out
 
 
-FEATURES = {"flattened_pixels": flattened_pixels, "colour_histogram": colour_histogram}
+def hog_features(images, size=(64, 64), orientations=9, pixels_per_cell=8, cells_per_block=2):
+    """Histogram of oriented gradients on the greyscale image: leaf shape and
+    texture, with colour removed (the contrast to colour_histogram)."""
+    from skimage.feature import hog
+
+    def one(img):
+        grey = Image.fromarray(img).convert("L").resize((size[1], size[0]), Image.BILINEAR)
+        return hog(np.asarray(grey), orientations=orientations,
+                   pixels_per_cell=(pixels_per_cell, pixels_per_cell),
+                   cells_per_block=(cells_per_block, cells_per_block), feature_vector=True)
+
+    first = one(images[0])
+    out = np.empty((len(images), len(first)), dtype=np.float32)
+    out[0] = first
+    for i in range(1, len(images)):
+        out[i] = one(images[i])
+    return out
+
+
+FEATURES = {"flattened_pixels": flattened_pixels, "colour_histogram": colour_histogram, "hog": hog_features}
 
 
 def extract(images, name, **kwargs):
