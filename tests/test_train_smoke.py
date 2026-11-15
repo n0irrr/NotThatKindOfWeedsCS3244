@@ -20,11 +20,12 @@ PER_CLASS = {"train": 4, "val": 2, "test": 2}
 
 @pytest.fixture
 def fake_root(tmp_path, monkeypatch):
-    """tmp_path laid out like the repo: data/images, data/splits/*.csv."""
-    classes = train.load_config(train.DEFAULT_CONFIG)["classes"]
+    """tmp_path laid out like the repo: data/images, <data.splits_dir>/*.csv."""
+    defaults = train.load_config(train.DEFAULT_CONFIG)
+    classes, split_dir = defaults["classes"], tmp_path / defaults["data"]["splits_dir"]
     rng = np.random.default_rng(0)
     (tmp_path / "data" / "images").mkdir(parents=True)
-    (tmp_path / "data" / "splits").mkdir()
+    split_dir.mkdir(parents=True)
     for split, n in PER_CLASS.items():
         rows = []
         for label, species in enumerate(classes):
@@ -34,7 +35,7 @@ def fake_root(tmp_path, monkeypatch):
                 img = rng.integers(0, 80, (48, 48, 3)) + np.array([label * 20, 100, 200 - label * 20])
                 Image.fromarray(img.clip(0, 255).astype(np.uint8)).save(tmp_path / "data" / "images" / name)
                 rows.append({"Filename": name, "Label": label, "Species": species})
-        pd.DataFrame(rows).to_csv(tmp_path / "data" / "splits" / f"{split}.csv", index=False)
+        pd.DataFrame(rows).to_csv(split_dir / f"{split}.csv", index=False)
 
     monkeypatch.setattr(train, "ROOT", tmp_path)
     monkeypatch.setattr(dataset, "CACHE_DIR", tmp_path / "data" / "processed")
@@ -50,14 +51,23 @@ def run(root, run_name, overrides, **kwargs):
     path.write_text(yaml.safe_dump({"run_name": run_name, **overrides, "training": training}))
     train.main(str(path), **kwargs)
     metrics = json.loads((root / "results" / "metrics" / f"{run_name}.json").read_text())
-    assert (root / "results" / "confusion_matrices" / f"{run_name}_test.png").exists()
-    for split in ("val", "test"):
-        assert 0.0 <= metrics["splits"][split]["model"]["macro_f1"] <= 1.0
+    # --val-only runs report on val and never score test; normal runs report on test
+    scored = ("val",) if kwargs.get("val_only") else ("val", "test")
+    assert set(metrics["splits"]) == set(scored)
+    split = scored[-1]
+    assert (root / "results" / "confusion_matrices" / f"{run_name}_{split}.png").exists()
+    preds = pd.read_csv(root / "results" / "predictions" / f"{run_name}_{split}.csv")
+    assert len(preds) == 9 * PER_CLASS[split] and preds["confidence"].between(0, 1).all()
+    for s in scored:
+        assert 0.0 <= metrics["splits"][s]["model"]["macro_f1"] <= 1.0
     return metrics
 
 
-@pytest.mark.parametrize("feature", [{"name": "colour_histogram", "bins": 8},
-                                     {"name": "flattened_pixels", "size": [8, 8]}])
+FEATURES = [{"name": "colour_histogram", "bins": 8}, {"name": "flattened_pixels", "size": [8, 8]},
+            {"name": "hog", "size": [32, 32]}]
+
+
+@pytest.mark.parametrize("feature", FEATURES, ids=lambda f: f["name"])
 def test_knn(fake_root, feature):
     metrics = run(fake_root, "knn_smoke", {
         "features": {**feature, "load_size": [32, 32]},
@@ -65,6 +75,34 @@ def test_knn(fake_root, feature):
                                             "metric": "euclidean", "pca": None}},
     })
     assert len(metrics["search"]) == 4
+
+
+@pytest.mark.parametrize("feature", FEATURES, ids=lambda f: f["name"])
+def test_logreg(fake_root, feature):
+    metrics = run(fake_root, "logreg_smoke", {
+        "features": {**feature, "load_size": [32, 32]},
+        "model": {"name": "logreg", "params": {"C_grid": [0.1, 1.0], "pca": None, "max_iter": 200}},
+    })
+    assert [r["C"] for r in metrics["search"]] == [0.1, 1.0]
+
+
+def test_val_only_never_scores_test(fake_root, monkeypatch):
+    """Tuning runs must not even load the test split."""
+    loaded = []
+    real_load_split = train.load_split
+    monkeypatch.setattr(train, "load_split", lambda csv, *a, **k: loaded.append(csv.stem) or real_load_split(csv, *a, **k))
+    run(fake_root, "knn_val_only", {
+        "features": {"name": "colour_histogram", "bins": 8, "load_size": [32, 32]},
+        "model": {"name": "knn", "params": {"k_grid": [1], "weights": "uniform", "metric": "euclidean", "pca": None}},
+    }, val_only=True)
+    assert "test" not in loaded
+
+    config = {"data": {"image_size": [32, 32]},
+              "model": {"name": "simple_cnn", "params": {"channels": [8, 16], "dropout": 0.1}},
+              "training": {"epochs": 1, "batch_size": 16, "learning_rate": 1.0e-3}}
+    run(fake_root, "cnn_val_only", config, val_only=True)
+    # once a config is chosen, its checkpoint is scored on test with --eval-only
+    run(fake_root, "cnn_val_only", config, eval_only=True)
 
 
 def test_simple_cnn(fake_root):
@@ -99,7 +137,8 @@ def test_simple_cnn_all_augmentations(fake_root):
     })
     assert len(metrics["history"]) == 1
     # train-only stats were created on first use, at the training image size
-    stats = json.loads((fake_root / "data" / "splits" / "train_stats_32x32.json").read_text())
+    split_dir = fake_root / train.load_config(train.DEFAULT_CONFIG)["data"]["splits_dir"]
+    stats = json.loads((split_dir / "train_stats_32x32.json").read_text())
     assert stats["n_images"] == 9 * PER_CLASS["train"] and stats["image_size"] == [32, 32]
 
 
@@ -113,3 +152,35 @@ def test_augmentation_only_on_train(fake_root):
     torch.manual_seed(0)
     draws = [datasets["train"][0][0] for _ in range(5)]
     assert not all(torch.equal(draws[0], d) for d in draws[1:])
+
+
+def test_explainability_helpers(fake_root):
+    """Grad-CAM, LIME and the error-gallery helpers run on trained smoke models."""
+    import matplotlib
+    matplotlib.use("Agg")
+    from src.evaluation import explain
+
+    cnn = {"data": {"image_size": [32, 32]},
+           "model": {"name": "simple_cnn", "params": {"channels": [8, 16], "dropout": 0.1}},
+           "training": {"epochs": 1, "batch_size": 16, "learning_rate": 1.0e-3}}
+    run(fake_root, "cnn_xai", cnn)
+    knn = {"features": {"name": "colour_histogram", "bins": 8, "load_size": [32, 32]},
+           "model": {"name": "knn", "params": {"k_grid": [1, 3], "weights": "uniform",
+                                               "metric": "euclidean", "pca": None}}}
+    run(fake_root, "knn_xai", knn)
+
+    preds = fake_root / "results" / "predictions" / "cnn_xai_test.csv"
+    rows = explain.confident_errors(preds, k=4)
+    images_dir = fake_root / "data" / "images"
+    pick = pd.read_csv(preds).head(2)
+
+    model, config = explain.load_cnn(fake_root / "cnn_xai.yaml", "cnn_xai", root=fake_root)
+    assert explain.gradcam_figure(model, config, pick["Filename"], pick["true"], root=fake_root).axes
+    model, config, feat = explain.fit_classical(fake_root / "knn_xai.yaml", root=fake_root)
+    assert explain.lime_knn_figure(model, config, feat, pick["Filename"][:1], pick["true"][:1],
+                                   root=fake_root, num_samples=20).axes
+    assert explain.gallery_figure(rows, images_dir).axes
+    tags = explain.tagging_template(rows, fake_root / "tags.csv")
+    assert list(tags.columns) == ["Filename", "true", "pred", "confidence", "cause", "notes"]
+    stats = explain.image_stats(pick["Filename"], images_dir)
+    assert {"brightness", "saturation", "contrast", "sharpness"} <= set(stats.columns)

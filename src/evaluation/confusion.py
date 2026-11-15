@@ -10,8 +10,17 @@ from sklearn.metrics import confusion_matrix
 
 
 def plot_confusion_matrix(y_true, y_pred, class_names, out_path, title=None):
-    """Row-normalised confusion matrix (rows = true class, i.e. recall on diagonal)."""
+    """Row-normalised confusion matrix (rows = true class, i.e. recall on diagonal).
+    Returns the raw counts."""
     cm = confusion_matrix(y_true, y_pred, labels=range(len(class_names)))
+    plot_confusion_counts(cm, class_names, out_path, title)
+    return cm
+
+
+def plot_confusion_counts(cm, class_names, out_path, title=None):
+    """Plot a matrix of counts (rows = true class), row-normalised so the
+    diagonal is each class's recall. Also used for counts pooled over runs."""
+    cm = np.asarray(cm)
     cm_norm = cm / cm.sum(axis=1, keepdims=True).clip(min=1)
     fig, ax = plt.subplots(figsize=(9, 7.5))
     sns.heatmap(cm_norm, annot=True, fmt=".2f", cmap="Blues", vmin=0, vmax=1,
@@ -25,7 +34,6 @@ def plot_confusion_matrix(y_true, y_pred, class_names, out_path, title=None):
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_path, dpi=150)
     plt.close(fig)
-    return cm
 
 
 def top_confusions(y_true, y_pred, class_names, k=5):

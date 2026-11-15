@@ -1,0 +1,490 @@
+{
+  "run_name": "logreg_hog_kaggle0",
+  "config": {
+    "seed": 42,
+    "data": {
+      "labels_csv": "data/labels.csv",
+      "images_dir": "data/images",
+      "splits_dir": "data/splits_kaggle0",
+      "image_size": [
+        224,
+        224
+      ],
+      "normalise": "train"
+    },
+    "classes": [
+      "Chinee apple",
+      "Lantana",
+      "Parkinsonia",
+      "Parthenium",
+      "Prickly acacia",
+      "Rubber vine",
+      "Siam weed",
+      "Snake weed",
+      "Negative"
+    ],
+    "model": {
+      "name": "logreg",
+      "params": {
+        "C_grid": [
+          0.001,
+          0.01,
+          0.1,
+          1,
+          10,
+          100,
+          1000
+        ],
+        "pca": null,
+        "max_iter": 2000
+      }
+    },
+    "training": {
+      "epochs": 20,
+      "batch_size": 32,
+      "learning_rate": 0.001,
+      "augmentation": [],
+      "num_workers": 4
+    },
+    "evaluation": {
+      "metrics": [
+        "accuracy",
+        "macro_precision",
+        "macro_recall",
+        "macro_f1"
+      ],
+      "per_class": true,
+      "confusion_matrix": true
+    },
+    "run_name": "logreg_hog_kaggle0",
+    "features": {
+      "name": "hog",
+      "load_size": [
+        64,
+        64
+      ],
+      "size": [
+        64,
+        64
+      ]
+    }
+  },
+  "best_params": {
+    "pca": null,
+    "max_iter": 2000,
+    "seed": 42,
+    "C": 0.1
+  },
+  "search": [
+    {
+      "C": 0.001,
+      "val_macro_f1": 0.12283245276343191
+    },
+    {
+      "C": 0.01,
+      "val_macro_f1": 0.14207758499951423
+    },
+    {
+      "C": 0.1,
+      "val_macro_f1": 0.16035615527028943
+    },
+    {
+      "C": 1,
+      "val_macro_f1": 0.15425288736370973
+    },
+    {
+      "C": 10,
+      "val_macro_f1": 0.14730790414557152
+    },
+    {
+      "C": 100,
+      "val_macro_f1": 0.1406790693126464
+    },
+    {
+      "C": 1000,
+      "val_macro_f1": 0.14050251830238242
+    }
+  ],
+  "splits": {
+    "val": {
+      "model": {
+        "accuracy": 0.42987717794915736,
+        "macro_precision": 0.17663814175470932,
+        "macro_recall": 0.1567282428683506,
+        "macro_f1": 0.16035615527028943,
+        "per_class": {
+          "Chinee apple": {
+            "precision": 0.16129032258064516,
+            "recall": 0.1111111111111111,
+            "f1": 0.13157894736842105,
+            "support": 225
+          },
+          "Lantana": {
+            "precision": 0.13178294573643412,
+            "recall": 0.07981220657276995,
+            "f1": 0.09941520467836257,
+            "support": 213
+          },
+          "Parkinsonia": {
+            "precision": 0.18518518518518517,
+            "recall": 0.12135922330097088,
+            "f1": 0.1466275659824047,
+            "support": 206
+          },
+          "Parthenium": {
+            "precision": 0.0970873786407767,
+            "recall": 0.049019607843137254,
+            "f1": 0.06514657980456026,
+            "support": 204
+          },
+          "Prickly acacia": {
+            "precision": 0.14035087719298245,
+            "recall": 0.07547169811320754,
+            "f1": 0.09815950920245399,
+            "support": 212
+          },
+          "Rubber vine": {
+            "precision": 0.08641975308641975,
+            "recall": 0.06930693069306931,
+            "f1": 0.07692307692307693,
+            "support": 202
+          },
+          "Siam weed": {
+            "precision": 0.09917355371900827,
+            "recall": 0.05581395348837209,
+            "f1": 0.07142857142857142,
+            "support": 215
+          },
+          "Snake weed": {
+            "precision": 0.12422360248447205,
+            "recall": 0.09852216748768473,
+            "f1": 0.10989010989010989,
+            "support": 203
+          },
+          "Negative": {
+            "precision": 0.5642296571664601,
+            "recall": 0.7501372872048325,
+            "f1": 0.644035832154644,
+            "support": 1821
+          }
+        }
+      },
+      "majority_baseline": {
+        "accuracy": 0.5201371036846615,
+        "macro_precision": 0.05779301152051794,
+        "macro_recall": 0.1111111111111111,
+        "macro_f1": 0.0760365777276713,
+        "per_class": {
+          "Chinee apple": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 225
+          },
+          "Lantana": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 213
+          },
+          "Parkinsonia": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 206
+          },
+          "Parthenium": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 204
+          },
+          "Prickly acacia": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 212
+          },
+          "Rubber vine": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 202
+          },
+          "Siam weed": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 215
+          },
+          "Snake weed": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 203
+          },
+          "Negative": {
+            "precision": 0.5201371036846615,
+            "recall": 1.0,
+            "f1": 0.6843291995490417,
+            "support": 1821
+          }
+        }
+      }
+    },
+    "test": {
+      "model": {
+        "accuracy": 0.4342743085258055,
+        "macro_precision": 0.18464614883280278,
+        "macro_recall": 0.16184728875284013,
+        "macro_f1": 0.16624529275766764,
+        "per_class": {
+          "Chinee apple": {
+            "precision": 0.15337423312883436,
+            "recall": 0.11061946902654868,
+            "f1": 0.12853470437017994,
+            "support": 226
+          },
+          "Lantana": {
+            "precision": 0.14285714285714285,
+            "recall": 0.09389671361502347,
+            "f1": 0.11331444759206799,
+            "support": 213
+          },
+          "Parkinsonia": {
+            "precision": 0.19727891156462585,
+            "recall": 0.14009661835748793,
+            "f1": 0.1638418079096045,
+            "support": 207
+          },
+          "Parthenium": {
+            "precision": 0.14150943396226415,
+            "recall": 0.07317073170731707,
+            "f1": 0.09646302250803858,
+            "support": 205
+          },
+          "Prickly acacia": {
+            "precision": 0.07692307692307693,
+            "recall": 0.03755868544600939,
+            "f1": 0.050473186119873815,
+            "support": 213
+          },
+          "Rubber vine": {
+            "precision": 0.10077519379844961,
+            "recall": 0.06435643564356436,
+            "f1": 0.07854984894259819,
+            "support": 202
+          },
+          "Siam weed": {
+            "precision": 0.1415929203539823,
+            "recall": 0.07441860465116279,
+            "f1": 0.0975609756097561,
+            "support": 215
+          },
+          "Snake weed": {
+            "precision": 0.1476510067114094,
+            "recall": 0.10784313725490197,
+            "f1": 0.12464589235127478,
+            "support": 204
+          },
+          "Negative": {
+            "precision": 0.5598534201954397,
+            "recall": 0.7546652030735456,
+            "f1": 0.6428237494156148,
+            "support": 1822
+          }
+        }
+      },
+      "majority_baseline": {
+        "accuracy": 0.5195323638437411,
+        "macro_precision": 0.05772581820486013,
+        "macro_recall": 0.1111111111111111,
+        "macro_f1": 0.07597839911594838,
+        "per_class": {
+          "Chinee apple": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 226
+          },
+          "Lantana": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 213
+          },
+          "Parkinsonia": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 207
+          },
+          "Parthenium": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 205
+          },
+          "Prickly acacia": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 213
+          },
+          "Rubber vine": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 202
+          },
+          "Siam weed": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 215
+          },
+          "Snake weed": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 204
+          },
+          "Negative": {
+            "precision": 0.5195323638437411,
+            "recall": 1.0,
+            "f1": 0.6838055920435354,
+            "support": 1822
+          }
+        }
+      }
+    }
+  },
+  "top_confusions_test": [
+    [
+      "Siam weed",
+      "Negative",
+      150
+    ],
+    [
+      "Prickly acacia",
+      "Negative",
+      150
+    ],
+    [
+      "Parkinsonia",
+      "Negative",
+      150
+    ],
+    [
+      "Parthenium",
+      "Negative",
+      141
+    ],
+    [
+      "Chinee apple",
+      "Negative",
+      133
+    ]
+  ],
+  "confusion_matrix_test": [
+    [
+      25,
+      10,
+      6,
+      3,
+      8,
+      11,
+      8,
+      22,
+      133
+    ],
+    [
+      14,
+      20,
+      7,
+      5,
+      9,
+      18,
+      13,
+      10,
+      117
+    ],
+    [
+      2,
+      3,
+      29,
+      7,
+      10,
+      3,
+      1,
+      2,
+      150
+    ],
+    [
+      8,
+      6,
+      9,
+      15,
+      8,
+      5,
+      4,
+      9,
+      141
+    ],
+    [
+      14,
+      5,
+      8,
+      14,
+      8,
+      3,
+      1,
+      10,
+      150
+    ],
+    [
+      16,
+      17,
+      4,
+      5,
+      3,
+      13,
+      6,
+      17,
+      121
+    ],
+    [
+      5,
+      14,
+      11,
+      5,
+      4,
+      6,
+      16,
+      4,
+      150
+    ],
+    [
+      17,
+      7,
+      5,
+      6,
+      2,
+      16,
+      10,
+      22,
+      119
+    ],
+    [
+      62,
+      58,
+      68,
+      46,
+      52,
+      54,
+      54,
+      53,
+      1375
+    ]
+  ]
+}

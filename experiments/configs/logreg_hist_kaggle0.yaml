@@ -1,0 +1,17 @@
+# Logistic regression on HSV colour histograms. Kaggle split, fold 0. Merged on top of default.yaml.
+run_name: logreg_hist_kaggle0
+
+data:
+  splits_dir: data/splits_kaggle0   # Kaggle zip, labels/*_subset0.csv (src/data/kaggle_split.py)
+
+features:
+  name: colour_histogram
+  load_size: [64, 64]
+  bins: 32              # 96 dims, same as knn_hist
+
+model:
+  name: logreg
+  params:
+    C_grid: [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+    pca: null
+    max_iter: 2000

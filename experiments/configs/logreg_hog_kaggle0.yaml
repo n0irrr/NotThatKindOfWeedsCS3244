@@ -1,0 +1,17 @@
+# Logistic regression on HOG features. Kaggle split, fold 0. Merged on top of default.yaml.
+run_name: logreg_hog_kaggle0
+
+data:
+  splits_dir: data/splits_kaggle0   # Kaggle zip, labels/*_subset0.csv (src/data/kaggle_split.py)
+
+features:
+  name: hog
+  load_size: [64, 64]
+  size: [64, 64]        # 1764 dims, same as knn_hog
+
+model:
+  name: logreg
+  params:
+    C_grid: [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+    pca: null
+    max_iter: 2000

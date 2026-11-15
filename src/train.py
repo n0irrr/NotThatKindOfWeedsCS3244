@@ -6,6 +6,7 @@ import time
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import yaml
 
 from src.data.dataset import load_split
@@ -34,51 +35,65 @@ def load_config(path) -> dict:
     return config
 
 
-def load_images(config, size):
+def load_images(config, size, splits=SPLITS):
     data = config["data"]
     return {split: load_split(ROOT / data["splits_dir"] / f"{split}.csv",
                               ROOT / data["images_dir"], size, config["classes"])
-            for split in SPLITS}
+            for split in splits}
 
 
-def load_features(config):
+def load_features(config, splits=SPLITS):
     feat = dict(config["features"])
     load_size = tuple(feat.pop("load_size", config["data"]["image_size"]))
     return {split: (extract(images, **feat), y)
-            for split, (images, y) in load_images(config, load_size).items()}
+            for split, (images, y) in load_images(config, load_size, splits).items()}
 
 
-# ---------------------------------------------------------------- KNN
+def eval_splits(val_only):
+    """Held-out splits a run is scored on. --val-only (tuning runs) never loads
+    or scores test, so test can't influence any choice."""
+    return ("val",) if val_only else ("val", "test")
 
-def train_knn(config, feats):
-    from src.models import knn
 
-    params = dict(config["model"]["params"])
-    k_grid, weights_grid = params.pop("k_grid"), params.pop("weights")
-    weights_grid = [weights_grid] if isinstance(weights_grid, str) else weights_grid
-    params["seed"] = config["seed"]
+# ---------------------------------------------------------------- classical (KNN, logistic regression)
+
+def grid_search(build, params, grid, feats, classes):
+    """Fit one model per grid point and keep the best by val macro F1 (test is
+    never touched here). Returns (refit best model, best params, search log)."""
     (X_tr, y_tr), (X_va, y_va) = feats["train"], feats["val"]
-
-    # Select (k, weights) on val macro F1; test is never touched here.
     search = []
-    for k, w in itertools.product(k_grid, weights_grid):
-        model = knn.build({**params, "n_neighbors": k, "weights": w}).fit(X_tr, y_tr)
-        f1 = compute_metrics(y_va, model.predict(X_va), config["classes"])["macro_f1"]
-        search.append({"n_neighbors": k, "weights": w, "val_macro_f1": f1})
-        print(f"  k={k:<3} weights={w:<8} val macro F1={f1:.4f}")
+    for point in grid:
+        model = build({**params, **point}).fit(X_tr, y_tr)
+        f1 = compute_metrics(y_va, model.predict(X_va), classes)["macro_f1"]
+        search.append({**point, "val_macro_f1": f1})
+        print("  " + "  ".join(f"{k}={v}" for k, v in point.items()) + f"  val macro F1={f1:.4f}")
     best = max(search, key=lambda r: r["val_macro_f1"])
-    best_params = {**params, "n_neighbors": best["n_neighbors"], "weights": best["weights"]}
-    return knn.build(best_params).fit(X_tr, y_tr), best_params, search
+    best_params = {**params, **{k: best[k] for k in grid[0]}}
+    return build(best_params).fit(X_tr, y_tr), best_params, search
 
 
-def run_knn(config):
+def classical_grid(config):
+    """(build function, fixed params, list of grid points) for knn or logreg."""
+    params = {**config["model"]["params"], "seed": config["seed"]}
+    if config["model"]["name"] == "knn":
+        from src.models import knn
+        k_grid, weights = params.pop("k_grid"), params.pop("weights")
+        weights = [weights] if isinstance(weights, str) else weights
+        return knn.build, params, [{"n_neighbors": k, "weights": w} for k, w in itertools.product(k_grid, weights)]
+    from src.models import logreg
+    return logreg.build, params, [{"C": c} for c in params.pop("C_grid")]
+
+
+def run_classical(config, val_only=False):
     t0 = time.time()
-    feats = load_features(config)
+    splits = ("train", *eval_splits(val_only))
+    feats = load_features(config, splits)
     print(f"features: {config['features']['name']} "
           f"train {feats['train'][0].shape}, loaded in {time.time() - t0:.1f}s")
-    model, best_params, search = train_knn(config, feats)
-    print(f"best: k={best_params['n_neighbors']} weights={best_params['weights']}")
-    preds = {s: (feats[s][1], model.predict(feats[s][0])) for s in ("val", "test")}
+    build, params, grid = classical_grid(config)
+    model, best_params, search = grid_search(build, params, grid, feats, config["classes"])
+    print("best: " + ", ".join(f"{k}={best_params[k]}" for k in grid[0]))
+    preds = {s: (feats[s][1], model.predict_proba(feats[s][0])) for s in eval_splits(val_only)}
     return preds, feats["train"][1], {"best_params": best_params, "search": search}
 
 
@@ -90,6 +105,8 @@ def get_device():
         return torch.device("mps")
     if torch.cuda.is_available():
         return torch.device("cuda")
+    if hasattr(torch, "xpu") and torch.xpu.is_available():   # Intel GPUs
+        return torch.device("xpu")
     return torch.device("cpu")
 
 
@@ -101,7 +118,7 @@ def seed_everything(seed):
     torch.manual_seed(seed)
 
 
-def run_cnn(config, eval_only=False, resume=False):
+def run_cnn(config, eval_only=False, resume=False, val_only=False):
     import warnings
 
     import torch
@@ -132,15 +149,26 @@ def run_cnn(config, eval_only=False, resume=False):
         return DataLoader(datasets[split], batch_size=tr_cfg["batch_size"], shuffle=shuffle, generator=g,
                           num_workers=num_workers, persistent_workers=num_workers > 0)
 
+    # Optional speed-ups (both off by default): channels_last memory layout, and
+    # bfloat16 autocast for the forward pass (weights and optimizer stay fp32).
+    memory_format = torch.channels_last if tr_cfg.get("channels_last") else torch.contiguous_format
+    amp = tr_cfg.get("amp")
+    if amp not in (None, "bf16"):
+        raise ValueError(f"unknown training.amp {amp!r}; use bf16 or leave it unset")
+
     def to_input(xb):
-        return xb.to(device)
+        return xb.to(device, memory_format=memory_format)
 
-    loaders = {s: loader(s, s == "train") for s in SPLITS}
+    def autocast():
+        return torch.autocast(device.type, dtype=torch.bfloat16, enabled=amp == "bf16")
 
-    model = build_model(config).to(device)
+    loaders = {s: loader(s, s == "train") for s in ("train", *eval_splits(val_only))}
+
+    model = build_model(config).to(device, memory_format=memory_format)
     n_params = sum(p.numel() for p in model.parameters())
     print(f"device: {device}, params: {n_params:,}, train images: {len(y_tr)}, "
-          f"augmentation: {tr_cfg.get('augmentation') or 'none'}")
+          f"augmentation: {tr_cfg.get('augmentation') or 'none'}, seed: {config['seed']}"
+          + (f", amp: {amp}" if amp else ""))
 
     criterion = nn.CrossEntropyLoss()
     # Stage "head": backbone frozen, head only at head_learning_rate (constant).
@@ -169,13 +197,16 @@ def run_cnn(config, eval_only=False, resume=False):
 
     @torch.no_grad()
     def predict(split):
+        """(mean loss, class probabilities (n, n_classes)) on a split."""
         model.eval()
-        losses, preds = [], []
+        losses, probs = [], []
         for xb, yb in loaders[split]:
-            out = model(to_input(xb))
+            with autocast():
+                out = model(to_input(xb))
+            out = out.float()
             losses.append(criterion(out, yb.to(device)).item() * len(yb))
-            preds.append(out.argmax(1).cpu().numpy())
-        return float(np.sum(losses) / len(loaders[split].dataset)), np.concatenate(preds)
+            probs.append(out.softmax(1).cpu().numpy())
+        return float(np.sum(losses) / len(loaders[split].dataset)), np.concatenate(probs)
 
     # {run}.pt = best weights (by val macro F1); {run}_last.pt = full state after
     # the latest epoch, for exact resumes.
@@ -227,8 +258,9 @@ def run_cnn(config, eval_only=False, resume=False):
         loss_sum, correct = 0.0, 0
         for xb, yb in loaders["train"]:
             yb = yb.to(device)
-            out = model(to_input(xb))
-            loss = criterion(out, yb)
+            with autocast():
+                out = model(to_input(xb))
+                loss = criterion(out, yb)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -236,8 +268,8 @@ def run_cnn(config, eval_only=False, resume=False):
             correct += (out.argmax(1) == yb).sum().item()
         scheduler.step()
 
-        val_loss, val_pred = predict("val")
-        val_f1 = compute_metrics(datasets["val"].targets, val_pred, config["classes"])["macro_f1"]
+        val_loss, val_proba = predict("val")
+        val_f1 = compute_metrics(datasets["val"].targets, val_proba.argmax(1), config["classes"])["macro_f1"]
         row = {"epoch": epoch, "train_loss": loss_sum / len(y_tr), "train_acc": correct / len(y_tr),
                "val_loss": val_loss, "val_macro_f1": val_f1}
         history.append(row)
@@ -266,7 +298,7 @@ def run_cnn(config, eval_only=False, resume=False):
     model.load_state_dict(torch.load(ckpt_path, map_location=device))
     if history:
         plot_curves(history, ROOT / "results" / "figures" / f"{run_name}_curves.png", run_name)
-    preds = {s: (datasets[s].targets, predict(s)[1]) for s in ("val", "test")}
+    preds = {s: (datasets[s].targets, predict(s)[1]) for s in eval_splits(val_only)}
     return preds, y_tr, {"best_epoch": best_epoch, "n_params": n_params,
                          "device": str(device), "history": history}
 
@@ -303,23 +335,48 @@ def plot_curves(history, out_path, title):
 
 # ---------------------------------------------------------------- shared
 
-RUNNERS = {"knn": run_knn, "simple_cnn": run_cnn, "resnet50": run_cnn}
+CLASSICAL = ("knn", "logreg")
+RUNNERS = {"knn": run_classical, "logreg": run_classical, "simple_cnn": run_cnn, "resnet50": run_cnn}
+
+
+def save_predictions(config, split, y, proba):
+    """Per-image true/predicted class and class probabilities, for error analysis.
+    Rows are in split-CSV order (val/test loaders don't shuffle)."""
+    classes = config["classes"]
+    df = pd.read_csv(ROOT / config["data"]["splits_dir"] / f"{split}.csv", usecols=["Filename"])
+    assert len(df) == len(y), f"{split}: {len(df)} rows in CSV but {len(y)} predictions"
+    df["true"] = [classes[i] for i in y]
+    df["pred"] = [classes[i] for i in proba.argmax(1)]
+    df["confidence"] = proba.max(1).round(4)
+    for i, c in enumerate(classes):
+        df[f"p_{c}"] = proba[:, i].round(4)
+    path = ROOT / "results" / "predictions" / f"{config['run_name']}_{split}.csv"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(path, index=False)
+    return path
 
 
 def report(config, preds, y_train, extra, elapsed):
-    """Metrics JSON, test confusion matrix, console summary. Same for all models."""
+    """Metrics JSON, confusion matrix, per-image predictions and console summary,
+    the same for every model. preds maps split -> (true labels, class probabilities).
+    Final runs report on test; --val-only tuning runs on val (test never loaded)."""
     classes, run_name = config["classes"], config["run_name"]
     results = {"run_name": run_name, "config": config, **extra, "splits": {}}
-    for split, (y, y_pred) in preds.items():
+    for split, (y, proba) in preds.items():
         results["splits"][split] = {
-            "model": compute_metrics(y, y_pred, classes),
+            "model": compute_metrics(y, proba.argmax(1), classes),
             "majority_baseline": majority_class_baseline(y, y_train, classes),
         }
-    y, y_pred = preds["test"]
-    plot_confusion_matrix(y, y_pred, classes,
-                          ROOT / "results" / "confusion_matrices" / f"{run_name}_test.png",
-                          title=f"{run_name} (test)")
-    results["top_confusions_test"] = top_confusions(y, y_pred, classes)
+    split = "test" if "test" in preds else "val"
+    y, proba = preds[split]
+    y_pred = proba.argmax(1)
+    cm = plot_confusion_matrix(y, y_pred, classes,
+                               ROOT / "results" / "confusion_matrices" / f"{run_name}_{split}.png",
+                               title=f"{run_name} ({split})")
+    results[f"top_confusions_{split}"] = top_confusions(y, y_pred, classes)
+    # raw counts (rows = true class), so repeated runs can be pooled later
+    results[f"confusion_matrix_{split}"] = cm.tolist()
+    pred_path = save_predictions(config, split, y, proba)
 
     metrics_path = ROOT / "results" / "metrics" / f"{run_name}.json"
     metrics_path.parent.mkdir(parents=True, exist_ok=True)
@@ -327,28 +384,34 @@ def report(config, preds, y_train, extra, elapsed):
 
     keys = ["macro_f1", "macro_precision", "macro_recall", "accuracy"]
     print(f"\n{'':<22}" + "".join(f"{k:>16}" for k in keys))
-    for split, r in results["splits"].items():
+    for s, r in results["splits"].items():
         for who in ("model", "majority_baseline"):
-            print(f"{split + ' ' + who:<22}" + "".join(f"{r[who][k]:>16.4f}" for k in keys))
-    print("\ntest per-class F1:")
-    for c, m in results["splits"]["test"]["model"]["per_class"].items():
+            print(f"{s + ' ' + who:<22}" + "".join(f"{r[who][k]:>16.4f}" for k in keys))
+    print(f"\n{split} per-class F1:")
+    for c, m in results["splits"][split]["model"]["per_class"].items():
         print(f"  {c:<16} F1={m['f1']:.3f}  P={m['precision']:.3f}  R={m['recall']:.3f}  n={m['support']}")
-    print("top test confusions (true -> pred):")
-    for t, p, n in results["top_confusions_test"]:
+    print(f"top {split} confusions (true -> pred):")
+    for t, p, n in results[f"top_confusions_{split}"]:
         print(f"  {t} -> {p}: {n}")
-    print(f"\nsaved {metrics_path.relative_to(ROOT)} and confusion matrix ({elapsed:.1f}s total)")
+    print(f"\nsaved {metrics_path.relative_to(ROOT)}, {pred_path.relative_to(ROOT)} and confusion matrix "
+          f"({elapsed:.1f}s total)")
 
 
-def main(config_path: str, eval_only: bool = False, resume: bool = False) -> None:
+def main(config_path: str, eval_only: bool = False, resume: bool = False, seed=None,
+         val_only: bool = False) -> None:
     config = load_config(config_path)
     config.setdefault("run_name", Path(config_path).stem)
+    if seed is not None:
+        # repeated runs of one config: same split, different init / shuffling / augmentation
+        config["seed"] = seed
+        config["run_name"] = f"{config['run_name']}_s{seed}"
     name = config["model"]["name"]
     if name not in RUNNERS:
         raise NotImplementedError(f"Training not implemented yet for model: {name}")
+    if (eval_only or resume) and name in CLASSICAL:
+        raise ValueError(f"--eval-only / --resume need a saved model; {name} has none")
     t0 = time.time()
-    kwargs = {k: True for k, v in [("eval_only", eval_only), ("resume", resume)] if v}
-    if kwargs and name == "knn":
-        raise ValueError("--eval-only / --resume need a saved model; KNN has none")
+    kwargs = {k: True for k, v in [("eval_only", eval_only), ("resume", resume), ("val_only", val_only)] if v}
     preds, y_train, extra = RUNNERS[name](config, **kwargs)
     report(config, preds, y_train, extra, time.time() - t0)
 
@@ -360,5 +423,11 @@ if __name__ == "__main__":
                         help="skip training; evaluate experiments/checkpoints/{run_name}.pt")
     parser.add_argument("--resume", action="store_true",
                         help="continue training from experiments/checkpoints/{run_name}[_last].pt")
+    parser.add_argument("--seed", type=int,
+                        help="override the config seed and save as {run_name}_s{seed} "
+                             "(combine runs with python -m src.evaluation.aggregate)")
+    parser.add_argument("--val-only", action="store_true",
+                        help="tuning run: score val only and never load test. Score test later, once the "
+                             "config is chosen, with --eval-only (CNNs) or a normal run (KNN/logreg)")
     args = parser.parse_args()
-    main(args.config, args.eval_only, args.resume)
+    main(args.config, args.eval_only, args.resume, args.seed, args.val_only)

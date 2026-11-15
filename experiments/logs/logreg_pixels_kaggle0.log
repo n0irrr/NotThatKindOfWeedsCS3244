@@ -1,0 +1,34 @@
+features: flattened_pixels train (10501, 3072), loaded in 2.7s
+  C=0.001  val macro F1=0.2146
+  C=0.01  val macro F1=0.2388
+  C=0.1  val macro F1=0.2283
+  C=1  val macro F1=0.2069
+  C=10  val macro F1=0.2018
+  C=100  val macro F1=0.2001
+  C=1000  val macro F1=0.2014
+best: C=0.01
+
+                              macro_f1 macro_precision    macro_recall        accuracy
+val model                       0.2388          0.2803          0.2234          0.5139
+val majority_baseline           0.0760          0.0578          0.1111          0.5201
+test model                      0.2338          0.2679          0.2204          0.5036
+test majority_baseline          0.0760          0.0577          0.1111          0.5195
+
+test per-class F1:
+  Chinee apple     F1=0.130  P=0.167  R=0.106  n=226
+  Lantana          F1=0.206  P=0.252  R=0.174  n=213
+  Parkinsonia      F1=0.118  P=0.167  R=0.092  n=207
+  Parthenium       F1=0.184  P=0.214  R=0.161  n=205
+  Prickly acacia   F1=0.187  P=0.227  R=0.160  n=213
+  Rubber vine      F1=0.098  P=0.167  R=0.069  n=202
+  Siam weed        F1=0.274  P=0.367  R=0.219  n=215
+  Snake weed       F1=0.192  P=0.225  R=0.167  n=204
+  Negative         F1=0.716  P=0.626  R=0.836  n=1822
+top test confusions (true -> pred):
+  Parkinsonia -> Negative: 153
+  Siam weed -> Negative: 135
+  Rubber vine -> Negative: 134
+  Chinee apple -> Negative: 116
+  Prickly acacia -> Negative: 113
+
+saved results\metrics\logreg_pixels_kaggle0.json, results\predictions\logreg_pixels_kaggle0_test.csv and confusion matrix (452.9s total)

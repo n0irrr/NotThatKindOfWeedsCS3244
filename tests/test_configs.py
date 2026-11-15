@@ -5,7 +5,7 @@ import pytest
 
 from src.features.augment import AUGMENTATIONS
 from src.features.classical import FEATURES
-from src.train import RUNNERS, build_model, load_config
+from src.train import CLASSICAL, RUNNERS, build_model, load_config
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIGS = sorted((ROOT / "experiments" / "configs").glob("*.yaml"))
@@ -24,11 +24,14 @@ def test_config(path):
     for split in ("train", "val", "test"):
         assert (splits_dir / f"{split}.csv").exists(), f"missing {splits_dir}/{split}.csv"
 
-    if model["name"] == "knn":
+    if model["name"] in CLASSICAL:
         if "features" not in config:   # default.yaml names knn but no features
             pytest.skip("no features section")
         assert config["features"]["name"] in FEATURES
-        assert model["params"]["k_grid"] and model["params"]["weights"]
+        if model["name"] == "knn":
+            assert model["params"]["k_grid"] and model["params"]["weights"]
+        else:
+            assert model["params"]["C_grid"]
         return
 
     training = config["training"]
