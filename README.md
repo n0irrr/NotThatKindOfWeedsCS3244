@@ -130,10 +130,16 @@ averaging the 3 seeds another +0.010, with no retraining. Both were chosen on va
 (`experiments/ITERATION_LOG.md` rows 12–13) before test was scored.
 
 Training at 224×224 instead of 128×128 (the only change; row 15) adds +0.042 per run,
-and with TTA and the 3-seed ensemble gives the best result, 0.973 (row 16). A per-class
-decision offset tuned on val to counter the pull towards Negative did not generalise
-(+0.0003 cross-validated within val, row 14) and was not applied.
+and with TTA and the 3-seed ensemble gives the best result, 0.973 (row 16). At 224 px
+the gain over a single model comes from the ensemble: on test the ensemble without TTA
+also scores 0.973. 256×256, the native size, was worse on val (0.954, seed 1; row 17)
+and was not scored on test. A per-class decision offset tuned on val to counter the
+pull towards Negative did not generalise (+0.0003 cross-validated within val, row 14)
+and was not applied. Details in `notebooks/04_transfer.ipynb` section 7.
 
 Per-class scores, pooled confusion matrices, Grad-CAM, LIME and the error gallery
 are in `notebooks/05_error_analysis.ipynb`; figures in
-`results/figures/error_analysis_kaggle0/`.
+`results/figures/error_analysis_kaggle0/`. Its section 5 shows that every test image
+but 3 has a training frame from the same capture session taken within 10 minutes
+(the authors' folds split by image, not session), so these scores likely overstate
+accuracy on a new field.
