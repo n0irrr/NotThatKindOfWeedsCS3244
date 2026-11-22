@@ -1,0 +1,28 @@
+# ResNet-50 (ImageNet), flip + rotate + random crop, 30 epochs, bfloat16, at 224x224.
+# Only change vs resnet50_aug_geo_crop_30ep_bf16_kaggle0.yaml: input size 128 -> 224
+# (the paper's size, and ImageNet's). Tune with --val-only first; ~3x the compute per epoch.
+# Kaggle split, fold 0. Merged on top of default.yaml.
+run_name: resnet50_aug_geo_crop_30ep_bf16_224_kaggle0
+
+data:
+  splits_dir: data/splits_kaggle0   # Kaggle zip, labels/*_subset0.csv (src/data/kaggle_split.py)
+  image_size: [224, 224]
+  normalise: imagenet
+
+model:
+  name: resnet50
+  params:
+    pretrained: true
+    dropout: 0.3
+    weight_decay: 1.0e-4
+
+training:
+  freeze_epochs: 2
+  epochs: 30
+  batch_size: 32
+  learning_rate: 1.0e-4
+  head_learning_rate: 1.0e-3
+  patience: 30              # no early stopping, as for the 128x128 runs
+  augmentation: [flip, rotate, crop]
+  amp: bf16
+  channels_last: true

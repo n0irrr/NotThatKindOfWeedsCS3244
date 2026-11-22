@@ -67,6 +67,21 @@ def combos(probs_by_seed: dict) -> dict:
 
 
 def evaluate(config_path, seeds, split="val", batch_size=64, root=ROOT):
+    config, y, probs_by_seed = score_views(config_path, seeds, split, batch_size, root)
+    run_name = config.get("run_name", Path(config_path).stem)
+    results = {name: compute_metrics(y, p.argmax(1), config["classes"])
+               for name, p in combos(probs_by_seed).items()}
+    for tta in ("", " + TTA"):   # single runs: mean +/- std over seeds
+        vals = {k: [results[f"s{s}{tta}"][k] for s in seeds] for k in KEYS}
+        results[f"single{tta} (mean)"] = {k: float(np.mean(v)) for k, v in vals.items()}
+        results[f"single{tta} (std)"] = {k: float(np.std(v, ddof=1)) if len(v) > 1 else 0.0
+                                         for k, v in vals.items()}
+    return run_name, results
+
+
+def score_views(config_path, seeds, split="val", batch_size=64, root=ROOT):
+    """Labels and the 8-view softmax outputs of each seed's checkpoint on one split.
+    Returns (config, y, {seed: (8, n, n_classes)})."""
     import torch
     from torch.utils.data import DataLoader
 
@@ -92,15 +107,7 @@ def evaluate(config_path, seeds, split="val", batch_size=64, root=ROOT):
         probs_by_seed[seed] = view_probs(model, loader, device, tr_cfg.get("amp"), tr_cfg.get("channels_last"))
         print(f"  scored {run_name}_s{seed} on {split} ({len(dataset)} images x {N_VIEWS} views)")
 
-    y = np.asarray(dataset.targets)
-    results = {name: compute_metrics(y, p.argmax(1), config["classes"])
-               for name, p in combos(probs_by_seed).items()}
-    for tta in ("", " + TTA"):   # single runs: mean +/- std over seeds
-        vals = {k: [results[f"s{s}{tta}"][k] for s in seeds] for k in KEYS}
-        results[f"single{tta} (mean)"] = {k: float(np.mean(v)) for k, v in vals.items()}
-        results[f"single{tta} (std)"] = {k: float(np.std(v, ddof=1)) if len(v) > 1 else 0.0
-                                         for k, v in vals.items()}
-    return run_name, results
+    return config, np.asarray(dataset.targets), probs_by_seed
 
 
 def main():
