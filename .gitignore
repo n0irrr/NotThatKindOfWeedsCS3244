@@ -12,6 +12,7 @@ data/processed/
 *.pkl
 *.joblib
 experiments/checkpoints/
+experiments/cache/
 
 # Experiment tracking
 wandb/

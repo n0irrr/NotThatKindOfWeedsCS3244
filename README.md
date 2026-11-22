@@ -100,7 +100,7 @@ is misleading), with macro precision/recall, per-class breakdown and a confusion
 matrix for every run. Final configs are repeated over seeds and reported as
 mean ± std. Anchored against the majority-class baseline. For reference, the
 paper reports 95.7% accuracy for ResNet50 averaged over all 5 folds at 224×224;
-ours uses fold 0 only and 128×128 inputs.
+ours uses fold 0 only, at 128×128 and (rows 15–16) 224×224.
 
 ## Results (Kaggle split, fold 0, test set)
 
@@ -118,13 +118,21 @@ ours uses fold 0 only and 128×128 inputs.
 | ResNet-50, no augmentation (1 seed) | 0.870 | 0.878 | 0.865 | 0.900 |
 | ResNet-50 + flip / rotate / random crop (3 seeds) | 0.923 ± 0.005 | 0.936 ± 0.006 | 0.910 ± 0.004 | 0.940 ± 0.004 |
 | ResNet-50 + flip / rotate / random crop, with TTA (3 seeds) | 0.938 ± 0.004 | 0.951 ± 0.002 | 0.926 ± 0.008 | 0.951 ± 0.004 |
-| **ResNet-50, ensemble of the 3 seeds, with TTA** | **0.948** | **0.958** | **0.939** | **0.959** |
+| ResNet-50, ensemble of the 3 seeds, with TTA | 0.948 | 0.958 | 0.939 | 0.959 |
+| ResNet-50 + flip / rotate / random crop, 224×224 (3 seeds) | 0.965 ± 0.002 | 0.969 ± 0.001 | 0.962 ± 0.002 | 0.973 ± 0.002 |
+| ResNet-50, 224×224, with TTA (3 seeds) | 0.969 ± 0.002 | 0.972 ± 0.001 | 0.966 ± 0.003 | 0.976 ± 0.001 |
+| **ResNet-50, 224×224, ensemble of the 3 seeds, with TTA** | **0.973** | **0.976** | **0.970** | **0.978** |
 
 Augmentation adds +0.05 macro F1 for ResNet-50 and +0.035 for the simple CNN, both
 well above the seed spread (± 0.005). Test-time augmentation (TTA: averaging each
 image's predictions over its 8 flip / 90° rotation views) adds another +0.016, and
 averaging the 3 seeds another +0.010, with no retraining. Both were chosen on val
 (`experiments/ITERATION_LOG.md` rows 12–13) before test was scored.
+
+Training at 224×224 instead of 128×128 (the only change; row 15) adds +0.042 per run,
+and with TTA and the 3-seed ensemble gives the best result, 0.973 (row 16). A per-class
+decision offset tuned on val to counter the pull towards Negative did not generalise
+(+0.0003 cross-validated within val, row 14) and was not applied.
 
 Per-class scores, pooled confusion matrices, Grad-CAM, LIME and the error gallery
 are in `notebooks/05_error_analysis.ipynb`; figures in
